@@ -130,6 +130,10 @@ security:
     - /warm-flow-ui/config
     - /workflow/run
     - /coding/**
+    # 应用对话接口（公开访问）
+    - /system/chatapp/appList
+    - /system/chatapp/connect/**
+    - /system/chatapp/chat/send
 # 多租户配置
 tenant:
   # 是否开启
@@ -314,7 +318,7 @@ vector-store:
   # 向量存储类型 可选(weaviate/milvus/qdrant)
   # 如需修改向量库类型，请修改此配置值!
   # 注意：需与 docker-compose 实际部署的向量库保持一致（当前 compose 内置 weaviate，映射端口 28080）
-  type: weaviate
+  type: qdrant
   # Weaviate配置
   weaviate:
     protocol: http
@@ -326,8 +330,8 @@ vector-store:
     collectionname: LocalKnowledge
   # Qdrant配置
   qdrant:
-    host: localhost
-    port: 6334
+    host: http://192.168.100.89
+    port: 6333
     collectionname: LocalKnowledge
     api-key:
     use-tls: false
