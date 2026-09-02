@@ -125,6 +125,10 @@ public class SseMessageUtils {
         if (!isEnable() || sessionId == null) {
             return;
         }
+        if (MANAGER == null) {
+            log.error("【SSE发送失败】MANAGER为null");
+            return;
+        }
         SseMessageDto dto = new SseMessageDto();
         dto.setSessionId(sessionId);
         dto.setEventDto(eventDto);
