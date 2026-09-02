@@ -18,6 +18,7 @@ import org.ruoyi.common.core.validate.EditGroup;
 import org.ruoyi.common.log.enums.BusinessType;
 import org.ruoyi.common.excel.utils.ExcelUtil;
 import org.ruoyi.common.sse.core.SseEmitterManager;
+import org.ruoyi.domain.vo.chat.ChatAppSimpleVo;
 import org.ruoyi.domain.vo.chat.ChatAppVo;
 import org.ruoyi.domain.bo.chat.ChatAppBo;
 import org.ruoyi.service.chat.IChatAppService;
@@ -51,10 +52,10 @@ public class ChatAppController extends BaseController {
     }
 
     /**
-     * 查询启用的应用列表（下拉选择器用）
+     * 查询启用的应用列表（下拉选择器用，不包含敏感字段）
      */
     @GetMapping("/appList")
-    public R<List<ChatAppVo>> appList() {
+    public R<List<ChatAppSimpleVo>> appList() {
         return R.ok(chatAppService.queryEnableList());
     }
 

@@ -1,5 +1,6 @@
 package org.ruoyi.service.chat;
 
+import org.ruoyi.domain.vo.chat.ChatAppSimpleVo;
 import org.ruoyi.domain.vo.chat.ChatAppVo;
 import org.ruoyi.domain.bo.chat.ChatAppBo;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
@@ -42,11 +43,11 @@ public interface IChatAppService {
     List<ChatAppVo> queryList(ChatAppBo bo);
 
     /**
-     * 查询启用的应用列表
+     * 查询启用的应用列表（精简信息，不包含敏感字段）
      *
      * @return 应用列表
      */
-    List<ChatAppVo> queryEnableList();
+    List<ChatAppSimpleVo> queryEnableList();
 
     /**
      * 新增应用管理

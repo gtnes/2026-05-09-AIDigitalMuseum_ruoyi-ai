@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.ruoyi.domain.bo.chat.ChatAppBo;
+import org.ruoyi.domain.vo.chat.ChatAppSimpleVo;
 import org.ruoyi.domain.vo.chat.ChatAppVo;
 import org.ruoyi.domain.entity.chat.ChatApp;
 import org.ruoyi.mapper.chat.ChatAppMapper;
@@ -71,16 +72,16 @@ public class ChatAppServiceImpl implements IChatAppService {
     }
 
     /**
-     * 查询启用的应用列表
+     * 查询启用的应用列表（精简信息，不包含敏感字段）
      *
      * @return 应用列表
      */
     @Override
-    public List<ChatAppVo> queryEnableList() {
+    public List<ChatAppSimpleVo> queryEnableList() {
         LambdaQueryWrapper<ChatApp> lqw = Wrappers.lambdaQuery();
         lqw.eq(ChatApp::getStatus, "0");
         lqw.orderByAsc(ChatApp::getId);
-        return baseMapper.selectVoList(lqw);
+        return baseMapper.selectVoList(lqw, ChatAppSimpleVo.class);
     }
 
     private LambdaQueryWrapper<ChatApp> buildQueryWrapper(ChatAppBo bo) {
