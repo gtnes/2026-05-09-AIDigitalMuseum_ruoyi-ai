@@ -1,5 +1,7 @@
 package org.ruoyi.domain.vo.chat;
 
+import org.ruoyi.common.translation.annotation.Translation;
+import org.ruoyi.common.translation.constant.TransConstant;
 import org.ruoyi.domain.entity.chat.ChatApp;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
@@ -30,5 +32,6 @@ public class ChatAppSimpleVo implements Serializable {
 
     private String appDescribe;
 
+    @Translation(type = TransConstant.OSS_ID_TO_URL)
     private String appShow;
 }
