@@ -55,7 +55,7 @@ public class ChatAppServiceImpl implements IChatAppService {
     @Override
     public TableDataInfo<ChatAppVo> queryPageList(ChatAppBo bo, PageQuery pageQuery) {
         LambdaQueryWrapper<ChatApp> lqw = buildQueryWrapper(bo);
-        Page<ChatAppVo> result = baseMapper.selectVoPage(pageQuery.build(), lqw);
+        Page<ChatAppVo> result = baseMapper.selectPageAppList(pageQuery.build(), lqw);
         return TableDataInfo.build(result);
     }
 
@@ -68,7 +68,7 @@ public class ChatAppServiceImpl implements IChatAppService {
     @Override
     public List<ChatAppVo> queryList(ChatAppBo bo) {
         LambdaQueryWrapper<ChatApp> lqw = buildQueryWrapper(bo);
-        return baseMapper.selectVoList(lqw);
+        return baseMapper.selectAppList(lqw);
     }
 
     /**
