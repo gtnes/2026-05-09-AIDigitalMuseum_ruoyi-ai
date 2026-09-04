@@ -70,7 +70,7 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
     @Override
     public TableDataInfo<AiMuseumVo> queryPageList(AiMuseumBo bo, PageQuery pageQuery) {
         LambdaQueryWrapper<AiMuseum> lqw = buildQueryWrapper(bo);
-        Page<AiMuseumVo> result = baseMapper.selectVoPage(pageQuery.build(), lqw);
+        Page<AiMuseumVo> result = baseMapper.selectPageMuseumList(pageQuery.build(), lqw);
         result.getRecords().forEach(this::fillExpire);
         return TableDataInfo.build(result);
     }
@@ -84,7 +84,7 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
     @Override
     public List<AiMuseumVo> queryList(AiMuseumBo bo) {
         LambdaQueryWrapper<AiMuseum> lqw = buildQueryWrapper(bo);
-        List<AiMuseumVo> list = baseMapper.selectVoList(lqw);
+        List<AiMuseumVo> list = baseMapper.selectMuseumList(lqw);
         list.forEach(this::fillExpire);
         return list;
     }
