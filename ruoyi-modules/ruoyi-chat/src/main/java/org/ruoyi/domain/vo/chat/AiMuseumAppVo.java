@@ -51,6 +51,11 @@ public class AiMuseumAppVo implements Serializable {
     private String description;
 
     /**
+     * 职责
+     */
+    private String duty;
+
+    /**
      * 展示排序
      */
     private Integer sort;

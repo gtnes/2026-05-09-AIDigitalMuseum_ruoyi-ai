@@ -16,6 +16,7 @@ import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.common.web.core.BaseController;
 import org.ruoyi.domain.bo.chat.AiMuseumBo;
+import org.ruoyi.domain.vo.chat.AiMuseumFrontVo;
 import org.ruoyi.domain.vo.chat.AiMuseumVo;
 import org.ruoyi.service.chat.IAiMuseumService;
 import org.springframework.validation.annotation.Validated;
@@ -74,6 +75,17 @@ public class AiMuseumController extends BaseController {
     public R<AiMuseumVo> getInfo(@NotNull(message = "主键不能为空")
                                  @PathVariable Long id) {
         return R.ok(aiMuseumService.queryById(id));
+    }
+
+    /**
+     * 前台获取AI博物馆展示信息（公开接口，无需登录，含服务到期检查）
+     *
+     * @param id 主键
+     */
+    @GetMapping("/front/{id}")
+    public R<AiMuseumFrontVo> frontInfo(@NotNull(message = "主键不能为空")
+                                        @PathVariable Long id) {
+        return R.ok(aiMuseumService.frontQueryById(id));
     }
 
     /**

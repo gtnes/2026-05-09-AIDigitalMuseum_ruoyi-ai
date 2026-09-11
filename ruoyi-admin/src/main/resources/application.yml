@@ -134,6 +134,8 @@ security:
     - /system/chatapp/appList
     - /system/chatapp/connect/**
     - /system/chatapp/chat/send
+    # AI博物馆前台展示接口（公开访问）
+    - /system/aimuseum/front/*
 # 多租户配置
 tenant:
   # 是否开启

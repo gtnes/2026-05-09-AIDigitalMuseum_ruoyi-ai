@@ -15,7 +15,9 @@ import org.ruoyi.domain.bo.chat.AiMuseumBo;
 import org.ruoyi.domain.entity.chat.AiMuseum;
 import org.ruoyi.domain.entity.chat.AiMuseumApp;
 import org.ruoyi.domain.entity.chat.ChatApp;
+import org.ruoyi.domain.vo.chat.AiMuseumAppFrontVo;
 import org.ruoyi.domain.vo.chat.AiMuseumAppVo;
+import org.ruoyi.domain.vo.chat.AiMuseumFrontVo;
 import org.ruoyi.domain.vo.chat.AiMuseumVo;
 import org.ruoyi.mapper.chat.AiMuseumMapper;
 import org.ruoyi.mapper.chat.ChatAppMapper;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +61,70 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
         fillExpire(vo);
         fillAppName(vo.getChatapps());
         return vo;
+    }
+
+    /**
+     * 前台查询AI博物馆实例（仅返回H5展示所需字段，图片ossId转URL由序列化阶段处理）
+     *
+     * @param id 主键
+     * @return AI博物馆前台展示视图对象，实例不存在或已停用时返回 null
+     */
+    @Override
+    public AiMuseumFrontVo frontQueryById(Long id) {
+        AiMuseumVo vo = queryById(id);
+        // 前台仅展示启用状态的实例
+        if (vo == null || vo.getStatus() == null || vo.getStatus() != 1) {
+            return null;
+        }
+        AiMuseumFrontVo front = new AiMuseumFrontVo();
+        front.setId(vo.getId());
+        front.setTitle(vo.getTitle());
+        front.setLogoUrl(vo.getLogoUrl());
+        front.setBannerUrl(vo.getBannerUrl());
+        front.setIsExpire(vo.getIsExpire());
+        front.setExpireTips(vo.getExpireTips());
+        front.setVrEnable(vo.getVrEnable());
+        front.setVrUrl(vo.getVrUrl());
+        if (CollUtil.isNotEmpty(vo.getChatapps())) {
+            // 批量查询智能体的描述与图标（appDescribe/appShow来自chat_app，不落库）
+            List<Long> appIds = vo.getChatapps().stream()
+                .map(AiMuseumAppVo::getId)
+                .filter(Objects::nonNull)
+                .toList();
+            Map<Long, ChatApp> appMap = appIds.isEmpty() ? Map.of() : chatAppMapper.selectByIds(appIds).stream()
+                .collect(Collectors.toMap(ChatApp::getId, app -> app, (a, b) -> a));
+            // 按展示排序升序，未设置的排在后面
+            List<AiMuseumAppFrontVo> apps = vo.getChatapps().stream()
+                .sorted(Comparator.comparing(AiMuseumAppVo::getSort,
+                    Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(appVo -> toFrontAppVo(appVo, appMap.get(appVo.getId())))
+                .toList();
+            front.setChatapps(apps);
+        }
+        return front;
+    }
+
+    /**
+     * 管理端智能体配置VO转前台展示VO
+     *
+     * @param appVo   博物馆配置中的智能体信息
+     * @param chatApp 对应的智能体（可能已被删除，为null时跳过描述与图标填充）
+     */
+    private AiMuseumAppFrontVo toFrontAppVo(AiMuseumAppVo appVo, ChatApp chatApp) {
+        AiMuseumAppFrontVo frontApp = new AiMuseumAppFrontVo();
+        frontApp.setId(appVo.getId());
+        frontApp.setAppName(appVo.getAppName());
+        frontApp.setBgUrl(appVo.getBgUrl());
+        frontApp.setIdleImgUrl(appVo.getIdleImgUrl());
+        frontApp.setTalkingGifUrl(appVo.getTalkingGifUrl());
+        frontApp.setDescription(appVo.getDescription());
+        frontApp.setDuty(appVo.getDuty());
+        frontApp.setSort(appVo.getSort());
+        if (chatApp != null) {
+            frontApp.setAppDescribe(chatApp.getAppDescribe());
+            frontApp.setAppShow(chatApp.getAppShow());
+        }
+        return frontApp;
     }
 
     /**

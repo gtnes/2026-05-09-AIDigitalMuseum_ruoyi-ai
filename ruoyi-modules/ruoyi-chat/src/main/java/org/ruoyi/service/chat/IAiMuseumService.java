@@ -3,6 +3,7 @@ package org.ruoyi.service.chat;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.domain.bo.chat.AiMuseumBo;
+import org.ruoyi.domain.vo.chat.AiMuseumFrontVo;
 import org.ruoyi.domain.vo.chat.AiMuseumVo;
 
 import java.util.Collection;
@@ -23,6 +24,14 @@ public interface IAiMuseumService {
      * @return AI博物馆实例
      */
     AiMuseumVo queryById(Long id);
+
+    /**
+     * 前台查询AI博物馆实例（仅返回H5展示所需字段，图片ossId转URL，含到期检查）
+     *
+     * @param id 主键
+     * @return AI博物馆前台展示视图对象，实例不存在或已停用时返回 null
+     */
+    AiMuseumFrontVo frontQueryById(Long id);
 
     /**
      * 分页查询AI博物馆列表
