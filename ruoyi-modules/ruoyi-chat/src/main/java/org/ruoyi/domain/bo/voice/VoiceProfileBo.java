@@ -1,0 +1,96 @@
+package org.ruoyi.domain.bo.voice;
+
+import io.github.linpeilie.annotations.AutoMapper;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.ruoyi.common.core.validate.AddGroup;
+import org.ruoyi.common.core.validate.EditGroup;
+import org.ruoyi.common.mybatis.core.domain.BaseEntity;
+import org.ruoyi.domain.entity.voice.VoiceProfile;
+
+import java.math.BigDecimal;
+
+/**
+ * AI语音音色档案业务对象 voice_profile
+ *
+ * @author ruoyi
+ * @date 2026-09-14
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@AutoMapper(target = VoiceProfile.class, reverseConvertGenerate = false)
+public class VoiceProfileBo extends BaseEntity {
+
+    /**
+     * 主键
+     */
+    @NotNull(message = "主键不能为空", groups = { EditGroup.class })
+    private Long id;
+
+    /**
+     * 音色名称(如 西西)
+     */
+    @NotBlank(message = "音色名称不能为空", groups = { AddGroup.class, EditGroup.class })
+    private String voiceName;
+
+    /**
+     * 音色头像URL
+     */
+    private String avatar;
+
+    /**
+     * 平台标识(aliyun/openai)
+     */
+    @NotBlank(message = "平台标识不能为空", groups = { AddGroup.class, EditGroup.class })
+    private String platform;
+
+    /**
+     * 平台音色ID(voice_platform.id)
+     */
+    @NotNull(message = "平台音色不能为空", groups = { AddGroup.class, EditGroup.class })
+    private Long platformVoiceId;
+
+    /**
+     * 关联模型管理ID(chat_model.id，提供平台apiHost/apiKey)
+     */
+    @NotNull(message = "关联模型不能为空", groups = { AddGroup.class, EditGroup.class })
+    private Long modelId;
+
+    /**
+     * 语速(0.5-2.0，默认1.0)
+     */
+    private BigDecimal speed;
+
+    /**
+     * 音调(0.5-2.0，默认1.0)
+     */
+    private BigDecimal pitch;
+
+    /**
+     * 音量(0-100，默认50)
+     */
+    private BigDecimal volume;
+
+    /**
+     * 试听文本
+     */
+    private String sampleText;
+
+    /**
+     * 状态(0正常 1停用)
+     */
+    private String status;
+
+    /**
+     * 显示顺序
+     */
+    private Integer sort;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+}
