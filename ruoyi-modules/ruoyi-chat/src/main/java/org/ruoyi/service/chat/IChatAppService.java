@@ -50,6 +50,14 @@ public interface IChatAppService {
     List<ChatAppSimpleVo> queryEnableList();
 
     /**
+     * 按ID查询启用的应用（精简信息，不包含敏感字段）
+     *
+     * @param id 主键
+     * @return 应用信息（未启用或不存在时返回null）
+     */
+    ChatAppSimpleVo queryEnableById(Long id);
+
+    /**
      * 新增应用管理
      *
      * @param bo 应用管理

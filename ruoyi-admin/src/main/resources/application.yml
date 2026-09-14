@@ -131,7 +131,7 @@ security:
     - /workflow/run
     - /coding/**
     # 应用对话接口（公开访问）
-    - /system/chatapp/appList
+    - /system/chatapp/appInfo/*
     - /system/chatapp/connect/**
     - /system/chatapp/chat/send
     # AI博物馆前台展示接口（公开访问）

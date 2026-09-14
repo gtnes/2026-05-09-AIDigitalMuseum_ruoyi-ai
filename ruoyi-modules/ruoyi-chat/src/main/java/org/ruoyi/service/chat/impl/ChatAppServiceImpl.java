@@ -84,6 +84,20 @@ public class ChatAppServiceImpl implements IChatAppService {
         return baseMapper.selectVoList(lqw, ChatAppSimpleVo.class);
     }
 
+    /**
+     * 按ID查询启用的应用（精简信息，不包含敏感字段）
+     *
+     * @param id 主键
+     * @return 应用信息（未启用或不存在时返回null）
+     */
+    @Override
+    public ChatAppSimpleVo queryEnableById(Long id) {
+        LambdaQueryWrapper<ChatApp> lqw = Wrappers.lambdaQuery();
+        lqw.eq(ChatApp::getId, id);
+        lqw.eq(ChatApp::getStatus, "0");
+        return baseMapper.selectVoOne(lqw, ChatAppSimpleVo.class);
+    }
+
     private LambdaQueryWrapper<ChatApp> buildQueryWrapper(ChatAppBo bo) {
         Map<String, Object> params = bo.getParams();
         LambdaQueryWrapper<ChatApp> lqw = Wrappers.lambdaQuery();

@@ -60,6 +60,21 @@ public class ChatAppController extends BaseController {
     }
 
     /**
+     * 按ID查询启用的应用信息（公开接口，仅返回该应用精简信息，不包含敏感字段）
+     *
+     * @param id 主键
+     */
+    @GetMapping("/appInfo/{id}")
+    public R<ChatAppSimpleVo> appInfo(@NotNull(message = "主键不能为空")
+                                      @PathVariable Long id) {
+        ChatAppSimpleVo vo = chatAppService.queryEnableById(id);
+        if (vo == null) {
+            return R.fail("应用不存在或未启用");
+        }
+        return R.ok(vo);
+    }
+
+    /**
      * 导出应用管理列表
      */
     @SaCheckPermission("system:chatapp:export")
