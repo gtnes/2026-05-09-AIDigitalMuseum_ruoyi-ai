@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 
 
@@ -76,6 +77,17 @@ public class ChatAppVo implements Serializable {
      */
     @ExcelProperty(value = "应用图标")
     private String appShow;
+
+    /**
+     * 欢迎语
+     */
+    @ExcelProperty(value = "欢迎语")
+    private String welcomeMsg;
+
+    /**
+     * 预设问题列表
+     */
+    private List<String> presetQuestions;
 
     /**
      * 状态（0正常 1停用）

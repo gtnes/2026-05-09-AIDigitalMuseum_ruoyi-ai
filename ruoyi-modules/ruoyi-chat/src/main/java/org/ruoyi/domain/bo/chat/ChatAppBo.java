@@ -9,6 +9,8 @@ import jakarta.validation.constraints.*;
 import org.ruoyi.common.core.validate.AddGroup;
 import org.ruoyi.common.core.validate.EditGroup;
 
+import java.util.List;
+
 /**
  * 应用管理业务对象 chat_app
  *
@@ -64,6 +66,16 @@ public class ChatAppBo extends BaseEntity {
      * 应用图标
      */
     private String appShow;
+
+    /**
+     * 欢迎语
+     */
+    private String welcomeMsg;
+
+    /**
+     * 预设问题列表
+     */
+    private List<String> presetQuestions;
 
     /**
      * 状态（0正常 1停用）

@@ -2,10 +2,12 @@ package org.ruoyi.domain.entity.chat;
 
 import org.ruoyi.common.tenant.core.TenantEntity;
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.util.List;
 
 /**
  * 应用管理对象 chat_app
@@ -15,7 +17,7 @@ import java.io.Serial;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("chat_app")
+@TableName(value = "chat_app", autoResultMap = true)
 public class ChatApp extends TenantEntity {
 
     @Serial
@@ -61,6 +63,17 @@ public class ChatApp extends TenantEntity {
      * 应用图标
      */
     private String appShow;
+
+    /**
+     * 欢迎语
+     */
+    private String welcomeMsg;
+
+    /**
+     * 预设问题列表（JSON数组存储）
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> presetQuestions;
 
     /**
      * 状态（0正常 1停用）

@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 应用管理精简视图对象（前端下拉选择器用，不包含敏感字段）
@@ -34,4 +35,14 @@ public class ChatAppSimpleVo implements Serializable {
 
     @Translation(type = TransConstant.OSS_ID_TO_URL)
     private String appShow;
+
+    /**
+     * 欢迎语
+     */
+    private String welcomeMsg;
+
+    /**
+     * 预设问题列表
+     */
+    private List<String> presetQuestions;
 }
