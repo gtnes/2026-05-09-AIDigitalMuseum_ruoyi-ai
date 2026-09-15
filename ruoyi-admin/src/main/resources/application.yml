@@ -136,9 +136,8 @@ security:
     - /system/chatapp/chat/send
     # AI博物馆前台展示接口（公开访问）
     - /system/aimuseum/front/*
-    # 语音合成接口（C端聊天播报，公开访问）
+    # 语音合成接口（C端聊天播报，公开访问；音色voiceId来自博物馆智能体配置）
     - /voice/tts
-    - /voice/tts/voices
 # 多租户配置
 tenant:
   # 是否开启

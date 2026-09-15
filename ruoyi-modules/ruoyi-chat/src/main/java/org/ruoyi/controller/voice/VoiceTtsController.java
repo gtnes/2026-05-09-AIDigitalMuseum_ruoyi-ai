@@ -63,8 +63,9 @@ public class VoiceTtsController {
     }
 
     /**
-     * 启用中的音色档案列表（C端音色选择下拉）
+     * 启用中的音色档案列表（管理端下拉选项，需登录）
      */
+    @SaCheckPermission("voice:profile:list")
     @GetMapping("/voices")
     public R<List<VoiceProfileVo>> voices() {
         VoiceProfileBo bo = new VoiceProfileBo();

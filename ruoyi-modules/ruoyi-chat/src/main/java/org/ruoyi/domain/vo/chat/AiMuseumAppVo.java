@@ -51,6 +51,11 @@ public class AiMuseumAppVo implements Serializable {
     private String description;
 
     /**
+     * AI语音音色档案id（voice_profile.id，空=不自动播报）
+     */
+    private Long voiceProfileId;
+
+    /**
      * 职责
      */
     private String duty;
