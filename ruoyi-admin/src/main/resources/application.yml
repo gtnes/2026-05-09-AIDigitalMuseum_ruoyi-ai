@@ -158,6 +158,13 @@ tenant:
     - trace_run
     - trace_node
 
+# 语音合成公开接口防护（防脚本直刷烧API费用）：HMAC签名密钥须与C端前端 TTS_SIGN_SECRET 常量保持一致
+tts:
+  # 是否开启签名校验（关闭后仍保留IP频率限制与日配额）
+  sign-enabled: true
+  # HMAC-SHA256签名密钥（更换时前后端需同步修改）
+  sign-secret: tts_9f3b7c2a4e8d1f6b0a5c3e7d9f2b4a6c
+
 # MyBatisPlus配置
 # https://baomidou.com/config/
 mybatis-plus:

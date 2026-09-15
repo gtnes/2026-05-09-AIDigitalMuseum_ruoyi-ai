@@ -11,6 +11,7 @@ import org.ruoyi.domain.vo.voice.VoiceProfileVo;
 import org.ruoyi.domain.vo.voice.VoiceTtsVo;
 import org.ruoyi.service.voice.IVoiceProfileService;
 import org.ruoyi.service.voice.IVoiceTtsService;
+import org.ruoyi.service.voice.security.TtsRequestGuard;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,13 +36,16 @@ public class VoiceTtsController {
 
     private final IVoiceTtsService voiceTtsService;
     private final IVoiceProfileService voiceProfileService;
+    private final TtsRequestGuard ttsRequestGuard;
 
     /**
      * 按音色档案合成语音
-     * C端聊天页播放按钮/自动播报调用：{ voiceId, text } -> dataUrl(mp3)
+     * C端聊天页播放按钮/自动播报调用：{ voiceId, text, timestamp, nonce, sign } -> dataUrl(mp3)
+     * 公开接口，先过防滥用守卫（签名防直刷 + nonce防重放 + IP频率/日配额）
      */
     @PostMapping
     public R<VoiceTtsVo> synthesize(@Valid @RequestBody VoiceTtsBo bo) {
+        ttsRequestGuard.check(bo);
         return R.ok(voiceTtsService.synthesize(bo));
     }
 
