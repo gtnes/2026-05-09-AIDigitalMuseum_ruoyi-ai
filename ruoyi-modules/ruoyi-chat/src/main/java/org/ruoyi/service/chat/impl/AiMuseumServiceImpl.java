@@ -119,6 +119,8 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
         frontApp.setTalkingGifUrl(appVo.getTalkingGifUrl());
         frontApp.setDescription(appVo.getDescription());
         frontApp.setVoiceProfileId(appVo.getVoiceProfileId());
+        frontApp.setVoiceEnabled(appVo.getVoiceEnabled());
+        frontApp.setVoiceAutoPlay(appVo.getVoiceAutoPlay());
         frontApp.setDuty(appVo.getDuty());
         frontApp.setSort(appVo.getSort());
         if (chatApp != null) {

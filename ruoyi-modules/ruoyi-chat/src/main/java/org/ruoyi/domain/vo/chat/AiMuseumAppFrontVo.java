@@ -64,9 +64,19 @@ public class AiMuseumAppFrontVo implements Serializable {
     private String description;
 
     /**
-     * AI语音音色档案id（voice_profile.id，空=不自动播报）
+     * AI语音音色档案id（voice_profile.id，空=不播报）
      */
     private Long voiceProfileId;
+
+    /**
+     * 语音开关（关闭时C端不显示播报按钮、不调用语音合成接口）
+     */
+    private Boolean voiceEnabled;
+
+    /**
+     * 语音自动播报（C端自动播报的初始状态）
+     */
+    private Boolean voiceAutoPlay;
 
     /**
      * 职责
