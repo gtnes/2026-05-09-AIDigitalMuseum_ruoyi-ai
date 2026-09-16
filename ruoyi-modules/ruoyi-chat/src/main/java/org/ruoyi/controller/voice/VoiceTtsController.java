@@ -67,7 +67,7 @@ public class VoiceTtsController {
     }
 
     /**
-     * 启用中的音色档案列表（管理端下拉选项，需登录）
+     * 启用中的音色档案列表（管理端下拉选项 / C端测试页音色选择，需登录+音色列表权限）
      */
     @SaCheckPermission("voice:profile:list")
     @GetMapping("/voices")
