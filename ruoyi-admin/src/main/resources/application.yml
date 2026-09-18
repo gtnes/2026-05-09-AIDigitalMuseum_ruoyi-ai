@@ -157,6 +157,8 @@ tenant:
     # 链路追踪监控表：运维需跨租户全局查看，且 trace_node 在异步线程写入、租户上下文不传播，故排除租户过滤
     - trace_run
     - trace_node
+    # 博物馆用量流水表：匿名C端请求写入（无租户上下文），运营侧全局统计，故排除租户过滤
+    - ai_museum_usage_log
 
 # 语音合成公开接口防护（防脚本直刷烧API费用）：HMAC签名密钥须与C端前端 TTS_SIGN_SECRET 常量保持一致
 tts:

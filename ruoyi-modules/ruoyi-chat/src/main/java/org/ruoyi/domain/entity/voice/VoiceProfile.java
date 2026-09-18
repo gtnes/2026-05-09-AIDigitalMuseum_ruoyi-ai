@@ -1,5 +1,6 @@
 package org.ruoyi.domain.entity.voice;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -73,6 +74,12 @@ public class VoiceProfile extends TenantEntity {
      * 试听文本
      */
     private String sampleText;
+
+    /**
+     * 计费单价（元/万字符，博物馆TTS用量计费依据，空=不计费）
+     */
+    @TableField("price_per_10k")
+    private BigDecimal pricePer10k;
 
     /**
      * 状态(0正常 1停用)

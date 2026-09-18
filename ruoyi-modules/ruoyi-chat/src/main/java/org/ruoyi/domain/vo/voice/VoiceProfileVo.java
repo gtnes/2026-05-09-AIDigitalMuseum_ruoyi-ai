@@ -106,6 +106,12 @@ public class VoiceProfileVo implements Serializable {
     private String sampleText;
 
     /**
+     * 计费单价（元/万字符，博物馆TTS用量计费依据，空=不计费）
+     */
+    @ExcelProperty(value = "计费单价(元/万字符)")
+    private BigDecimal pricePer10k;
+
+    /**
      * 状态(0正常 1停用)
      */
     @ExcelProperty(value = "状态")

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -53,6 +54,18 @@ public class ChatApp extends TenantEntity {
      * 密钥
      */
     private String apiKey;
+
+    /**
+     * 输入token单价（元/千token，博物馆对话用量计费依据，空=不计费）
+     */
+    @TableField("price_in_per_1k")
+    private BigDecimal priceInPer1k;
+
+    /**
+     * 输出token单价（元/千token，博物馆对话用量计费依据，空=不计费）
+     */
+    @TableField("price_out_per_1k")
+    private BigDecimal priceOutPer1k;
 
     /**
      * 应用描述

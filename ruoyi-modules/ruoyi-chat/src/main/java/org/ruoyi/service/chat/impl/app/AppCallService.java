@@ -23,6 +23,10 @@ public class AppCallService {
         private Long appId;
         private String content;
         private String sessionId;
+        /**
+         * 博物馆ID（博物馆C端museumSend传入，非空时按token计费记账；通用接口恒为空）
+         */
+        private Long museumId;
     }
 
     public void streamCall(AppCallRequest request) {
@@ -40,6 +44,6 @@ public class AppCallService {
             SseMessageUtils.sendError(request.getSessionId(), "不支持的服务商: " + app.getProviderCode());
             return;
         }
-        provider.streamCall(app, request.getContent(), request.getSessionId());
+        provider.streamCall(app, request);
     }
 }

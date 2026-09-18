@@ -9,6 +9,7 @@ import jakarta.validation.constraints.*;
 import org.ruoyi.common.core.validate.AddGroup;
 import org.ruoyi.common.core.validate.EditGroup;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -56,6 +57,16 @@ public class ChatAppBo extends BaseEntity {
      */
     @NotBlank(message = "密钥不能为空", groups = { AddGroup.class, EditGroup.class })
     private String apiKey;
+
+    /**
+     * 输入token单价（元/千token，博物馆对话用量计费依据，空=不计费）
+     */
+    private BigDecimal priceInPer1k;
+
+    /**
+     * 输出token单价（元/千token，博物馆对话用量计费依据，空=不计费）
+     */
+    private BigDecimal priceOutPer1k;
 
     /**
      * 应用描述

@@ -151,6 +151,8 @@ public class ChatAppController extends BaseController {
      */
     @PostMapping("/chat/send")
     public R<Void> chatSend(@RequestBody AppCallService.AppCallRequest request) {
+        // 通用接口不参与博物馆计费，强制清空防止伪造记账
+        request.setMuseumId(null);
         appCallService.streamCall(request);
         return R.ok();
     }
@@ -172,6 +174,7 @@ public class ChatAppController extends BaseController {
         request.setAppId(bo.getAppId());
         request.setContent(bo.getContent());
         request.setSessionId(bo.getSessionId());
+        request.setMuseumId(bo.getMuseumId());
         appCallService.streamCall(request);
         return R.ok();
     }

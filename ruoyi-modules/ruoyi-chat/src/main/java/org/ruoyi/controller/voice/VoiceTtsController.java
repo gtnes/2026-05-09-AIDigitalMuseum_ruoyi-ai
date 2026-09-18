@@ -13,6 +13,7 @@ import org.ruoyi.domain.vo.chat.AiMuseumVo;
 import org.ruoyi.domain.vo.voice.VoiceProfileVo;
 import org.ruoyi.domain.vo.voice.VoiceTtsVo;
 import org.ruoyi.service.chat.IAiMuseumService;
+import org.ruoyi.service.chat.IAiMuseumUsageService;
 import org.ruoyi.service.voice.IVoiceProfileService;
 import org.ruoyi.service.voice.IVoiceTtsService;
 import org.ruoyi.service.voice.security.TtsRequestGuard;
@@ -43,6 +44,7 @@ public class VoiceTtsController {
     private final IVoiceProfileService voiceProfileService;
     private final TtsRequestGuard ttsRequestGuard;
     private final IAiMuseumService aiMuseumService;
+    private final IAiMuseumUsageService aiMuseumUsageService;
 
     /**
      * 按音色档案合成语音
@@ -70,7 +72,10 @@ public class VoiceTtsController {
             return R.fail("该音色未在此博物馆开通");
         }
         ttsRequestGuard.check(bo);
-        return R.ok(voiceTtsService.synthesize(bo));
+        VoiceTtsVo vo = voiceTtsService.synthesize(bo);
+        // 按音色单价（元/万字符）记账，失败不影响合成结果
+        aiMuseumUsageService.recordTts(bo.getMuseumId(), bo.getVoiceId(), vo.getTextLength());
+        return R.ok(vo);
     }
 
     /**
