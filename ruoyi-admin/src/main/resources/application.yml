@@ -130,14 +130,11 @@ security:
     - /warm-flow-ui/config
     - /workflow/run
     - /coding/**
-    # 应用对话接口（公开访问）
+    # 应用对话接口（appInfo公开访问；connect为SSE通道，EventSource无法携带token且单独连接无害，保持公开；chat/send需登录）
     - /system/chatapp/appInfo/*
     - /system/chatapp/connect/**
-    - /system/chatapp/chat/send
     # AI博物馆前台展示接口（公开访问）
     - /system/aimuseum/front/*
-    # 语音合成接口（C端聊天播报，公开访问；音色voiceId来自博物馆智能体配置）
-    - /voice/tts
 # 多租户配置
 tenant:
   # 是否开启
