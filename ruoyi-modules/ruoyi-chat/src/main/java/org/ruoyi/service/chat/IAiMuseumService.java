@@ -34,6 +34,15 @@ public interface IAiMuseumService {
     AiMuseumFrontVo frontQueryById(Long id);
 
     /**
+     * 校验博物馆服务可用性（存在、启用、未到期），不通过时抛出ServiceException
+     * 供博物馆C端公开接口（museumSend/museumTTS）做准入校验
+     *
+     * @param museumId 博物馆ID
+     * @return 博物馆实例（含智能体配置列表，用于后续绑定校验）
+     */
+    AiMuseumVo checkServiceValid(Long museumId);
+
+    /**
      * 分页查询AI博物馆列表
      *
      * @param bo        查询条件

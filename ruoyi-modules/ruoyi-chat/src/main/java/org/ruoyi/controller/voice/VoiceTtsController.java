@@ -1,14 +1,18 @@
 package org.ruoyi.controller.voice;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.hutool.core.collection.CollUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.domain.R;
+import org.ruoyi.domain.bo.voice.MuseumVoiceTtsBo;
 import org.ruoyi.domain.bo.voice.VoiceProfileBo;
 import org.ruoyi.domain.bo.voice.VoiceTtsBo;
 import org.ruoyi.domain.bo.voice.VoiceTtsPreviewBo;
+import org.ruoyi.domain.vo.chat.AiMuseumVo;
 import org.ruoyi.domain.vo.voice.VoiceProfileVo;
 import org.ruoyi.domain.vo.voice.VoiceTtsVo;
+import org.ruoyi.service.chat.IAiMuseumService;
 import org.ruoyi.service.voice.IVoiceProfileService;
 import org.ruoyi.service.voice.IVoiceTtsService;
 import org.ruoyi.service.voice.security.TtsRequestGuard;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 语音合成接口（智能体输出文字转语音）
@@ -37,6 +42,7 @@ public class VoiceTtsController {
     private final IVoiceTtsService voiceTtsService;
     private final IVoiceProfileService voiceProfileService;
     private final TtsRequestGuard ttsRequestGuard;
+    private final IAiMuseumService aiMuseumService;
 
     /**
      * 按音色档案合成语音
@@ -45,6 +51,24 @@ public class VoiceTtsController {
      */
     @PostMapping
     public R<VoiceTtsVo> synthesize(@Valid @RequestBody VoiceTtsBo bo) {
+        ttsRequestGuard.check(bo);
+        return R.ok(voiceTtsService.synthesize(bo));
+    }
+
+    /**
+     * 博物馆C端按音色档案合成语音（公开接口，需museumId）
+     * 校验：博物馆存在且启用、服务未到期、音色已在该博物馆智能体中配置，再过防滥用守卫
+     * C端博物馆聊天页调用：{ museumId, voiceId, text, timestamp, nonce, sign } -> dataUrl(mp3)
+     */
+    @PostMapping("/museum")
+    public R<VoiceTtsVo> museumSynthesize(@Valid @RequestBody MuseumVoiceTtsBo bo) {
+        AiMuseumVo museum = aiMuseumService.checkServiceValid(bo.getMuseumId());
+        boolean bound = CollUtil.isNotEmpty(museum.getChatapps())
+            && museum.getChatapps().stream()
+                .anyMatch(app -> Objects.equals(app.getVoiceProfileId(), bo.getVoiceId()));
+        if (!bound) {
+            return R.fail("该音色未在此博物馆开通");
+        }
         ttsRequestGuard.check(bo);
         return R.ok(voiceTtsService.synthesize(bo));
     }

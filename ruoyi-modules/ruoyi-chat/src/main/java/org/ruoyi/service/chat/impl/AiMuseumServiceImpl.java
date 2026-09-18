@@ -105,6 +105,30 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
     }
 
     /**
+     * 校验博物馆服务可用性（存在、启用、未到期），不通过时抛出ServiceException
+     * 供博物馆C端公开接口（museumSend/museumTTS）做准入校验
+     *
+     * @param museumId 博物馆ID
+     * @return 博物馆实例（含智能体配置列表，用于后续绑定校验）
+     */
+    @Override
+    public AiMuseumVo checkServiceValid(Long museumId) {
+        AiMuseumVo vo = queryById(museumId);
+        if (vo == null) {
+            throw new ServiceException("博物馆不存在");
+        }
+        if (vo.getStatus() == null || vo.getStatus() != 1) {
+            throw new ServiceException("博物馆服务已停用");
+        }
+        // 到期判定与fillExpire一致：endTime有效且当前时间已超过
+        if (vo.getEndTime() != null && vo.getEndTime() > 0
+            && System.currentTimeMillis() / 1000 > vo.getEndTime()) {
+            throw new ServiceException("当前服务已到期");
+        }
+        return vo;
+    }
+
+    /**
      * 管理端智能体配置VO转前台展示VO
      *
      * @param appVo   博物馆配置中的智能体信息

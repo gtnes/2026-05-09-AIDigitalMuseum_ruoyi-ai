@@ -133,6 +133,9 @@ security:
     # 应用对话接口（appInfo公开访问；connect为SSE通道，EventSource无法携带token且单独连接无害，保持公开；chat/send需登录）
     - /system/chatapp/appInfo/*
     - /system/chatapp/connect/**
+    # 博物馆C端对话/语音接口（公开访问，需museumId，后端校验服务到期与智能体/音色绑定）
+    - /system/chatapp/chat/museumSend
+    - /voice/tts/museum
     # AI博物馆前台展示接口（公开访问）
     - /system/aimuseum/front/*
 # 多租户配置

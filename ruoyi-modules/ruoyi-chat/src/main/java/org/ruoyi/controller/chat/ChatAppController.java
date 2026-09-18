@@ -1,7 +1,9 @@
 package org.ruoyi.controller.chat;
 
 import java.util.List;
+import java.util.Objects;
 
+import cn.hutool.core.collection.CollUtil;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
@@ -18,9 +20,12 @@ import org.ruoyi.common.core.validate.EditGroup;
 import org.ruoyi.common.log.enums.BusinessType;
 import org.ruoyi.common.excel.utils.ExcelUtil;
 import org.ruoyi.common.sse.core.SseEmitterManager;
+import org.ruoyi.domain.bo.chat.MuseumChatSendBo;
+import org.ruoyi.domain.vo.chat.AiMuseumVo;
 import org.ruoyi.domain.vo.chat.ChatAppSimpleVo;
 import org.ruoyi.domain.vo.chat.ChatAppVo;
 import org.ruoyi.domain.bo.chat.ChatAppBo;
+import org.ruoyi.service.chat.IAiMuseumService;
 import org.ruoyi.service.chat.IChatAppService;
 import org.ruoyi.service.chat.impl.app.AppCallService;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
@@ -39,6 +44,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class ChatAppController extends BaseController {
 
     private final IChatAppService chatAppService;
+    private final IAiMuseumService aiMuseumService;
     private final AppCallService appCallService;
     private final SseEmitterManager sseEmitterManager;
 
@@ -145,6 +151,27 @@ public class ChatAppController extends BaseController {
      */
     @PostMapping("/chat/send")
     public R<Void> chatSend(@RequestBody AppCallService.AppCallRequest request) {
+        appCallService.streamCall(request);
+        return R.ok();
+    }
+
+    /**
+     * 博物馆C端应用对话发送（公开接口，需museumId）
+     * 校验：博物馆存在且启用、服务未到期、智能体已在该博物馆开通
+     */
+    @PostMapping("/chat/museumSend")
+    public R<Void> museumChatSend(@Validated @RequestBody MuseumChatSendBo bo) {
+        AiMuseumVo museum = aiMuseumService.checkServiceValid(bo.getMuseumId());
+        boolean bound = CollUtil.isNotEmpty(museum.getChatapps())
+            && museum.getChatapps().stream()
+                .anyMatch(app -> Objects.equals(app.getId(), bo.getAppId()));
+        if (!bound) {
+            return R.fail("该智能体未在此博物馆开通");
+        }
+        AppCallService.AppCallRequest request = new AppCallService.AppCallRequest();
+        request.setAppId(bo.getAppId());
+        request.setContent(bo.getContent());
+        request.setSessionId(bo.getSessionId());
         appCallService.streamCall(request);
         return R.ok();
     }
