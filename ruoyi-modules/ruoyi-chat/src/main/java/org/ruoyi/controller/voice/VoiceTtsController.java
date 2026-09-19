@@ -5,6 +5,8 @@ import cn.hutool.core.collection.CollUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.domain.R;
+import org.ruoyi.common.core.domain.model.LoginUser;
+import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.domain.bo.voice.MuseumVoiceTtsBo;
 import org.ruoyi.domain.bo.voice.VoiceProfileBo;
 import org.ruoyi.domain.bo.voice.VoiceTtsBo;
@@ -14,6 +16,7 @@ import org.ruoyi.domain.vo.voice.VoiceProfileVo;
 import org.ruoyi.domain.vo.voice.VoiceTtsVo;
 import org.ruoyi.service.chat.IAiMuseumService;
 import org.ruoyi.service.chat.IAiMuseumUsageService;
+import org.ruoyi.service.chat.IAiUsageService;
 import org.ruoyi.service.voice.IVoiceProfileService;
 import org.ruoyi.service.voice.IVoiceTtsService;
 import org.ruoyi.service.voice.security.TtsRequestGuard;
@@ -45,16 +48,27 @@ public class VoiceTtsController {
     private final TtsRequestGuard ttsRequestGuard;
     private final IAiMuseumService aiMuseumService;
     private final IAiMuseumUsageService aiMuseumUsageService;
+    private final IAiUsageService aiUsageService;
 
     /**
      * 按音色档案合成语音
      * C端聊天页播放按钮/自动播报调用：{ voiceId, text, timestamp, nonce, sign } -> dataUrl(mp3)
-     * 公开接口，先过防滥用守卫（签名防直刷 + nonce防重放 + IP频率/日配额）
+     * 需登录，先过防滥用守卫（签名防直刷 + nonce防重放 + IP频率/日配额）；用量记入通用流水（系统类别）
      */
     @PostMapping
     public R<VoiceTtsVo> synthesize(@Valid @RequestBody VoiceTtsBo bo) {
         ttsRequestGuard.check(bo);
-        return R.ok(voiceTtsService.synthesize(bo));
+        VoiceTtsVo vo = voiceTtsService.synthesize(bo);
+        // 通用接口记账：记入通用用量流水，失败不影响合成结果
+        VoiceProfileVo profile = voiceProfileService.queryById(bo.getVoiceId());
+        LoginUser loginUser = LoginHelper.getLoginUser();
+        aiUsageService.recordTts(
+            loginUser == null ? null : loginUser.getUserId(),
+            loginUser == null ? null : loginUser.getNickname(),
+            bo.getVoiceId(),
+            profile == null ? null : profile.getVoiceName(),
+            vo.getTextLength());
+        return R.ok(vo);
     }
 
     /**

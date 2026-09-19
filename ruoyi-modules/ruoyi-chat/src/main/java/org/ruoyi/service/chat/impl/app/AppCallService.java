@@ -27,6 +27,14 @@ public class AppCallService {
          * 博物馆ID（博物馆C端museumSend传入，非空时按token计费记账；通用接口恒为空）
          */
         private Long museumId;
+        /**
+         * 操作人ID（通用接口chat/send传入登录用户，异步SSE线程无登录上下文需提前捕获；博物馆C端为空）
+         */
+        private Long operId;
+        /**
+         * 操作人昵称快照（通用接口chat/send传入）
+         */
+        private String operName;
     }
 
     public void streamCall(AppCallRequest request) {

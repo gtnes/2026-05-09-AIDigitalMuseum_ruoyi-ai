@@ -8,6 +8,7 @@ import org.ruoyi.common.core.utils.StringUtils;
 import org.ruoyi.common.sse.utils.SseMessageUtils;
 import org.ruoyi.domain.vo.chat.ChatAppVo;
 import org.ruoyi.service.chat.IAiMuseumUsageService;
+import org.ruoyi.service.chat.IAiUsageService;
 import org.ruoyi.service.chat.impl.app.AppCallService;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ public class AppCallProviderDashScope implements AppCallProvider {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final IAiMuseumUsageService aiMuseumUsageService;
+    private final IAiUsageService aiUsageService;
 
     @Override
     public String getProviderCode() {
@@ -81,7 +83,7 @@ public class AppCallProviderDashScope implements AppCallProvider {
                                     SseMessageUtils.sendDone(sessionId);
                                     return;
                                 }
-                                parseAndSend(json, request, usageRecorded);
+                                parseAndSend(json, app, request, usageRecorded);
                             }
                         } catch (Exception e) {
                             log.error("解析SSE事件失败: {}", line, e);
@@ -112,7 +114,7 @@ public class AppCallProviderDashScope implements AppCallProvider {
         return OBJECT_MAPPER.writeValueAsString(body);
     }
 
-    private void parseAndSend(String json, AppCallService.AppCallRequest request, AtomicBoolean usageRecorded) {
+    private void parseAndSend(String json, ChatAppVo app, AppCallService.AppCallRequest request, AtomicBoolean usageRecorded) {
         String sessionId = request.getSessionId();
         try {
             log.debug("【DashScope解析】json={}", json);
@@ -128,11 +130,12 @@ public class AppCallProviderDashScope implements AppCallProvider {
                 return;
             }
 
-            // 博物馆C端计费：usage随最后一个数据块（finish_reason=stop）返回
+            // 计费记账：usage随最后一个数据块（finish_reason=stop）返回
             // 智能体应用格式为 usage.models[]（可能含多个模型分项），普通模型为 usage.input_tokens/output_tokens
             // 注意：中间数据块可能携带空usage节点，仅在出现真实token数时记账
+            // museumId非空记博物馆流水，否则记通用流水（系统类别，apps-chat等登录测试调用）
             JsonNode usage = root.path("usage");
-            if (!usage.isMissingNode() && !usage.isNull() && request.getMuseumId() != null) {
+            if (!usage.isMissingNode() && !usage.isNull()) {
                 long tokensIn = 0;
                 long tokensOut = 0;
                 JsonNode models = usage.path("models");
@@ -145,9 +148,18 @@ public class AppCallProviderDashScope implements AppCallProvider {
                     tokensIn = usage.path("input_tokens").asLong(0);
                     tokensOut = usage.path("output_tokens").asLong(0);
                 }
-                if ((tokensIn > 0 || tokensOut > 0) && usageRecorded.compareAndSet(false, true)) {
-                    aiMuseumUsageService.recordChat(request.getMuseumId(), request.getAppId(),
-                        request.getContent() == null ? 0 : request.getContent().length(), tokensIn, tokensOut);
+                if (tokensIn > 0 || tokensOut > 0) {
+                    if (usageRecorded.compareAndSet(false, true)) {
+                        int chars = request.getContent() == null ? 0 : request.getContent().length();
+                        if (request.getMuseumId() != null) {
+                            aiMuseumUsageService.recordChat(request.getMuseumId(), request.getAppId(),
+                                chars, tokensIn, tokensOut);
+                        } else {
+                            aiUsageService.recordChat(request.getOperId(), request.getOperName(),
+                                request.getAppId(), app == null ? null : app.getAppName(),
+                                chars, tokensIn, tokensOut);
+                        }
+                    }
                 }
             }
 

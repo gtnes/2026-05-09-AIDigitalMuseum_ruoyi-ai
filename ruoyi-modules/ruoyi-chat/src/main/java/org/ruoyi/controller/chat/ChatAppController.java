@@ -15,8 +15,10 @@ import org.ruoyi.common.log.annotation.Log;
 import org.ruoyi.common.web.core.BaseController;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.core.domain.R;
+import org.ruoyi.common.core.domain.model.LoginUser;
 import org.ruoyi.common.core.validate.AddGroup;
 import org.ruoyi.common.core.validate.EditGroup;
+import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.common.log.enums.BusinessType;
 import org.ruoyi.common.excel.utils.ExcelUtil;
 import org.ruoyi.common.sse.core.SseEmitterManager;
@@ -151,8 +153,14 @@ public class ChatAppController extends BaseController {
      */
     @PostMapping("/chat/send")
     public R<Void> chatSend(@RequestBody AppCallService.AppCallRequest request) {
-        // 通用接口不参与博物馆计费，强制清空防止伪造记账
+        // 通用接口不参与博物馆计费，强制清空防止伪造记账；改记入通用用量流水（系统类别）
         request.setMuseumId(null);
+        // 异步SSE线程无登录上下文，此处捕获操作人供provider记账
+        LoginUser loginUser = LoginHelper.getLoginUser();
+        if (loginUser != null) {
+            request.setOperId(loginUser.getUserId());
+            request.setOperName(loginUser.getNickname());
+        }
         appCallService.streamCall(request);
         return R.ok();
     }

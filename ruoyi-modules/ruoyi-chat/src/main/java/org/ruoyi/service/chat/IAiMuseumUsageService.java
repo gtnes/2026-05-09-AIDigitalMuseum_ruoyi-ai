@@ -1,6 +1,10 @@
 package org.ruoyi.service.chat;
 
+import org.ruoyi.common.mybatis.core.page.PageQuery;
+import org.ruoyi.common.mybatis.core.page.TableDataInfo;
+import org.ruoyi.domain.bo.chat.MuseumUsageLogBo;
 import org.ruoyi.domain.bo.chat.MuseumUsageQueryBo;
+import org.ruoyi.domain.vo.chat.MuseumUsageLogVo;
 import org.ruoyi.domain.vo.chat.MuseumUsageSummaryVo;
 
 import java.util.List;
@@ -42,5 +46,15 @@ public interface IAiMuseumUsageService {
      * @return 汇总列表（按费用降序）
      */
     List<MuseumUsageSummaryVo> summary(MuseumUsageQueryBo bo);
+
+    /**
+     * 分页查询博物馆用量流水明细（带博物馆/智能体/音色名称）
+     */
+    TableDataInfo<MuseumUsageLogVo> queryPageList(MuseumUsageLogBo bo, PageQuery pageQuery);
+
+    /**
+     * 查询博物馆用量流水明细列表（导出用）
+     */
+    List<MuseumUsageLogVo> queryList(MuseumUsageLogBo bo);
 
 }
