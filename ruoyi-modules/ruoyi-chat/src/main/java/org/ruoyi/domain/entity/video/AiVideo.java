@@ -35,12 +35,12 @@ public class AiVideo extends TenantEntity {
     private String title;
 
     /**
-     * 封面图片URL
+     * 封面图片（sys_oss.ossId，显示时实时换取访问URL，不存签名URL）
      */
     private String coverUrl;
 
     /**
-     * 视频文件URL
+     * 视频文件（sys_oss.ossId，显示时实时换取访问URL，不存签名URL）
      */
     private String videoUrl;
 

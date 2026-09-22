@@ -40,14 +40,13 @@ public class AiVideoVo implements Serializable {
     private String title;
 
     /**
-     * 封面图片URL
+     * 封面图片（sys_oss.ossId，前端显示时实时换取访问URL）
      */
     private String coverUrl;
 
     /**
-     * 视频文件URL
+     * 视频文件（sys_oss.ossId，前端显示时实时换取访问URL）
      */
-    @ExcelProperty(value = "视频地址")
     private String videoUrl;
 
     /**

@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS `ai_video_category` (
 CREATE TABLE IF NOT EXISTS `ai_video` (
     `id` bigint NOT NULL COMMENT '主键',
     `title` varchar(128) NOT NULL COMMENT '标题',
-    `cover_url` varchar(500) NULL DEFAULT NULL COMMENT '封面图片URL',
-    `video_url` varchar(500) NOT NULL COMMENT '视频文件URL',
+    `cover_url` varchar(500) NULL DEFAULT NULL COMMENT '封面图片（sys_oss.ossId）',
+    `video_url` varchar(500) NOT NULL COMMENT '视频文件（sys_oss.ossId）',
     `category_id` bigint NULL DEFAULT NULL COMMENT '所属分类ID(ai_video_category.id，仅内部筛选用，不对外)',
     `show_category` varchar(50) NULL DEFAULT NULL COMMENT '展示类别(对外展示：宣传片/文物/历史等，字典 ai_video_show_category)',
     `description` varchar(1000) NULL DEFAULT NULL COMMENT '描述',

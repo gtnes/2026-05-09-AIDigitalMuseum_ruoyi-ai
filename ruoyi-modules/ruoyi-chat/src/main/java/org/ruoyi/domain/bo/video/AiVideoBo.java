@@ -35,12 +35,12 @@ public class AiVideoBo extends BaseEntity {
     private String title;
 
     /**
-     * 封面图片URL
+     * 封面图片（sys_oss.ossId）
      */
     private String coverUrl;
 
     /**
-     * 视频文件URL
+     * 视频文件（sys_oss.ossId）
      */
     @NotBlank(message = "视频不能为空", groups = { AddGroup.class, EditGroup.class })
     private String videoUrl;
