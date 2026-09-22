@@ -83,10 +83,10 @@ spring:
   # 文件上传
   servlet:
     multipart:
-      # 单个文件大小
-      max-file-size: 10MB
-      # 设置总上传的文件大小
-      max-request-size: 20MB
+      # 单个文件大小（AI视频上传需要支持大文件）
+      max-file-size: 500MB
+      # 设置总上传的文件大小（略大于单文件限制，容纳multipart边界开销）
+      max-request-size: 600MB
   mvc:
     # 设置静态资源路径 防止所有请求都去查静态资源
     static-path-pattern: /static/**
