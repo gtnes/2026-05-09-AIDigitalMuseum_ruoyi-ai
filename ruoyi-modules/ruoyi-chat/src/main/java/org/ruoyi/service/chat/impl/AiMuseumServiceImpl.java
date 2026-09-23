@@ -85,6 +85,9 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
         front.setExpireTips(vo.getExpireTips());
         front.setVrEnable(vo.getVrEnable());
         front.setVrUrl(vo.getVrUrl());
+        front.setVideoEnable(vo.getVideoEnable());
+        front.setVideoCategoryId(vo.getVideoCategoryId());
+        front.setVideoChatappId(vo.getVideoChatappId());
         if (CollUtil.isNotEmpty(vo.getChatapps())) {
             // 批量查询智能体的描述与图标（appDescribe/appShow来自chat_app，不落库）
             List<Long> appIds = vo.getChatapps().stream()

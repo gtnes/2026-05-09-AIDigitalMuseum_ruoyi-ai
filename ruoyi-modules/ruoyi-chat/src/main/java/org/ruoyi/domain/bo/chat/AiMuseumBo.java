@@ -91,6 +91,21 @@ public class AiMuseumBo extends BaseEntity {
     private String vrUrl;
 
     /**
+     * 是否开启AI视频（0关闭 1开启）
+     */
+    private Integer videoEnable;
+
+    /**
+     * AI视频分类id（ai_video_category.id）
+     */
+    private Long videoCategoryId;
+
+    /**
+     * AI视频讲解员（chat_app.id，从本博物馆智能体配置中选择）
+     */
+    private Long videoChatappId;
+
+    /**
      * 权限操作列表（保留字段，暂未启用）
      */
     private List<Map<String, Object>> operationList;
