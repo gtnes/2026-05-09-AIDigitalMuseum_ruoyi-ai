@@ -81,6 +81,11 @@ public class AiVideo extends TenantEntity {
     private Integer sort;
 
     /**
+     * 是否置顶（0否 1是）
+     */
+    private Integer topFlag;
+
+    /**
      * 状态（0正常 1停用）
      */
     private String status;

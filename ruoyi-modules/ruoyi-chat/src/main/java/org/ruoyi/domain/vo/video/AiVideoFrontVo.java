@@ -70,4 +70,9 @@ public class AiVideoFrontVo implements Serializable {
      */
     private Integer sort;
 
+    /**
+     * 是否置顶（0否 1是）
+     */
+    private Integer topFlag;
+
 }

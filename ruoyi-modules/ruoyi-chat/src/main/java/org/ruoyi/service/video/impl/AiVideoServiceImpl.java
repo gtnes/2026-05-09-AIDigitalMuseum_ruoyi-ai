@@ -65,7 +65,8 @@ public class AiVideoServiceImpl implements IAiVideoService {
         lqw.eq(AiVideo::getCategoryId, categoryId);
         // status沿用sys_normal_disable约定：0正常 1停用
         lqw.eq(AiVideo::getStatus, "0");
-        lqw.orderByAsc(AiVideo::getSort).orderByAsc(AiVideo::getId);
+        // 置顶优先，再按显示顺序、id排列
+        lqw.orderByDesc(AiVideo::getTopFlag).orderByAsc(AiVideo::getSort).orderByAsc(AiVideo::getId);
         List<AiVideo> list = baseMapper.selectList(lqw);
         return MapstructUtils.convert(list, AiVideoFrontVo.class);
     }
@@ -111,7 +112,8 @@ public class AiVideoServiceImpl implements IAiVideoService {
         lqw.eq(bo.getCategoryId() != null, AiVideo::getCategoryId, bo.getCategoryId());
         lqw.eq(StringUtils.isNotBlank(bo.getShowCategory()), AiVideo::getShowCategory, bo.getShowCategory());
         lqw.eq(StringUtils.isNotBlank(bo.getStatus()), AiVideo::getStatus, bo.getStatus());
-        lqw.orderByAsc(AiVideo::getSort).orderByAsc(AiVideo::getId);
+        // 置顶优先，再按显示顺序、id排列
+        lqw.orderByDesc(AiVideo::getTopFlag).orderByAsc(AiVideo::getSort).orderByAsc(AiVideo::getId);
         return lqw;
     }
 

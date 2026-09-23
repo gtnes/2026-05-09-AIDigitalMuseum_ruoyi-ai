@@ -97,6 +97,12 @@ public class AiVideoVo implements Serializable {
     private Integer sort;
 
     /**
+     * 是否置顶（0否 1是）
+     */
+    @ExcelProperty(value = "是否置顶(1是 0否)")
+    private Integer topFlag;
+
+    /**
      * 状态（0正常 1停用）
      */
     @ExcelProperty(value = "状态", converter = ExcelDictConvert.class)
