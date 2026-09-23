@@ -16,6 +16,7 @@ import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.common.web.core.BaseController;
 import org.ruoyi.domain.bo.video.AiVideoBo;
+import org.ruoyi.domain.vo.video.AiVideoFrontVo;
 import org.ruoyi.domain.vo.video.AiVideoVo;
 import org.ruoyi.service.video.IAiVideoService;
 import org.springframework.validation.annotation.Validated;
@@ -51,6 +52,26 @@ public class AiVideoController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo<AiVideoVo> list(AiVideoBo bo, PageQuery pageQuery) {
         return aiVideoService.queryPageList(bo, pageQuery);
+    }
+
+    /**
+     * 前台查询指定分类下的视频列表（公开访问，仅启用中的视频，供博物馆C端展示）
+     *
+     * @param categoryId AI视频分类id
+     */
+    @GetMapping("/front/list/{categoryId}")
+    public R<List<AiVideoFrontVo>> frontListByCategory(@NotNull(message = "分类id不能为空") @PathVariable Long categoryId) {
+        return R.ok(aiVideoService.frontListByCategory(categoryId));
+    }
+
+    /**
+     * 前台查询视频详情（公开访问，仅启用中的视频，供博物馆C端播放页使用）
+     *
+     * @param id 主键
+     */
+    @GetMapping("/front/{id}")
+    public R<AiVideoFrontVo> frontGetInfo(@NotNull(message = "主键不能为空") @PathVariable Long id) {
+        return R.ok(aiVideoService.frontQueryById(id));
     }
 
     /**

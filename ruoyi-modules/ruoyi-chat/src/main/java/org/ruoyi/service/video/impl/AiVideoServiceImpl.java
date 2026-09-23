@@ -14,6 +14,7 @@ import org.ruoyi.domain.bo.video.AiVideoBo;
 import org.ruoyi.domain.entity.video.AiVideo;
 import org.ruoyi.domain.entity.video.AiVideoCategory;
 import org.ruoyi.domain.vo.video.AiVideoCategoryVo;
+import org.ruoyi.domain.vo.video.AiVideoFrontVo;
 import org.ruoyi.domain.vo.video.AiVideoVo;
 import org.ruoyi.mapper.video.AiVideoCategoryMapper;
 import org.ruoyi.mapper.video.AiVideoMapper;
@@ -53,6 +54,33 @@ public class AiVideoServiceImpl implements IAiVideoService {
         AiVideoVo vo = baseMapper.selectVoById(id);
         fillCategoryName(vo == null ? List.of() : List.of(vo));
         return vo;
+    }
+
+    /**
+     * 前台查询指定分类下的视频列表（仅启用中的视频，供博物馆C端展示）
+     */
+    @Override
+    public List<AiVideoFrontVo> frontListByCategory(Long categoryId) {
+        LambdaQueryWrapper<AiVideo> lqw = Wrappers.lambdaQuery();
+        lqw.eq(AiVideo::getCategoryId, categoryId);
+        // status沿用sys_normal_disable约定：0正常 1停用
+        lqw.eq(AiVideo::getStatus, "0");
+        lqw.orderByAsc(AiVideo::getSort).orderByAsc(AiVideo::getId);
+        List<AiVideo> list = baseMapper.selectList(lqw);
+        return MapstructUtils.convert(list, AiVideoFrontVo.class);
+    }
+
+    /**
+     * 前台查询视频详情（仅启用中的视频，供博物馆C端播放页使用）
+     */
+    @Override
+    public AiVideoFrontVo frontQueryById(Long id) {
+        AiVideo entity = baseMapper.selectById(id);
+        // 前台仅展示启用状态（0正常）的视频
+        if (entity == null || !"0".equals(entity.getStatus())) {
+            return null;
+        }
+        return MapstructUtils.convert(entity, AiVideoFrontVo.class);
     }
 
     /**

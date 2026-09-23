@@ -1,6 +1,7 @@
 package org.ruoyi.service.video;
 
 import org.ruoyi.domain.bo.video.AiVideoBo;
+import org.ruoyi.domain.vo.video.AiVideoFrontVo;
 import org.ruoyi.domain.vo.video.AiVideoVo;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
@@ -23,6 +24,22 @@ public interface IAiVideoService {
      * @return AI视频
      */
     AiVideoVo queryById(Long id);
+
+    /**
+     * 前台查询指定分类下的视频列表（仅启用中的视频，供博物馆C端展示）
+     *
+     * @param categoryId AI视频分类id
+     * @return 视频前台展示列表
+     */
+    List<AiVideoFrontVo> frontListByCategory(Long categoryId);
+
+    /**
+     * 前台查询视频详情（仅启用中的视频，供博物馆C端播放页使用）
+     *
+     * @param id 主键
+     * @return 视频前台展示对象，不存在或已停用时返回 null
+     */
+    AiVideoFrontVo frontQueryById(Long id);
 
     /**
      * 分页查询AI视频列表
