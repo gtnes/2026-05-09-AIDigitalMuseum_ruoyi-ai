@@ -11,6 +11,7 @@ import org.ruoyi.common.core.validate.EditGroup;
 import org.ruoyi.common.mybatis.core.domain.BaseEntity;
 import org.ruoyi.domain.entity.chat.AiMuseum;
 import org.ruoyi.domain.entity.chat.AiMuseumApp;
+import org.ruoyi.domain.entity.chat.AiMuseumDomain;
 
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,11 @@ public class AiMuseumBo extends BaseEntity {
      */
     @Valid
     private List<AiMuseumApp> chatapps;
+
+    /**
+     * 域名配置列表（可配置多个域名，默认为空，元素含域名与环境类型）
+     */
+    private List<AiMuseumDomain> domains;
 
     /**
      * 备注

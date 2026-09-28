@@ -5,6 +5,7 @@ import cn.idev.excel.annotation.ExcelProperty;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import org.ruoyi.domain.entity.chat.AiMuseum;
+import org.ruoyi.domain.entity.chat.AiMuseumDomain;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -124,6 +125,11 @@ public class AiMuseumVo implements Serializable {
      * 智能体配置列表
      */
     private List<AiMuseumAppVo> chatapps;
+
+    /**
+     * 域名配置列表（可配置多个域名，默认为空，元素含域名与环境类型）
+     */
+    private List<AiMuseumDomain> domains;
 
     /**
      * 备注

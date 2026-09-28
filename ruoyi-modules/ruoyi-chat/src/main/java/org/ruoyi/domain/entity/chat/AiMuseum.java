@@ -110,6 +110,12 @@ public class AiMuseum extends TenantEntity {
     private List<AiMuseumApp> chatapps;
 
     /**
+     * 域名配置列表（JSON存储，可配置多个域名，默认为空，元素含域名与环境类型）
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<AiMuseumDomain> domains;
+
+    /**
      * 权限操作列表（保留字段，暂未启用）
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
