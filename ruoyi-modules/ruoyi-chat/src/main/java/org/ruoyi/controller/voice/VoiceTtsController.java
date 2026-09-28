@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.domain.R;
 import org.ruoyi.common.core.domain.model.LoginUser;
+import org.ruoyi.common.core.utils.ServletUtils;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.domain.bo.voice.MuseumVoiceTtsBo;
 import org.ruoyi.domain.bo.voice.VoiceProfileBo;
@@ -59,7 +60,7 @@ public class VoiceTtsController {
     public R<VoiceTtsVo> synthesize(@Valid @RequestBody VoiceTtsBo bo) {
         ttsRequestGuard.check(bo);
         VoiceTtsVo vo = voiceTtsService.synthesize(bo);
-        // 通用接口记账：记入通用用量流水，失败不影响合成结果
+        // 通用接口记账：记入通用用量流水（含访问者IP与归属地），失败不影响合成结果
         VoiceProfileVo profile = voiceProfileService.queryById(bo.getVoiceId());
         LoginUser loginUser = LoginHelper.getLoginUser();
         aiUsageService.recordTts(
@@ -67,7 +68,8 @@ public class VoiceTtsController {
             loginUser == null ? null : loginUser.getNickname(),
             bo.getVoiceId(),
             profile == null ? null : profile.getVoiceName(),
-            vo.getTextLength());
+            vo.getTextLength(),
+            ServletUtils.getClientIP());
         return R.ok(vo);
     }
 
@@ -87,8 +89,9 @@ public class VoiceTtsController {
         }
         ttsRequestGuard.check(bo);
         VoiceTtsVo vo = voiceTtsService.synthesize(bo);
-        // 按音色单价（元/万字符）记账，失败不影响合成结果
-        aiMuseumUsageService.recordTts(bo.getMuseumId(), bo.getVoiceId(), vo.getTextLength());
+        // 按音色单价（元/万字符）记账（含访问者IP与归属地），失败不影响合成结果
+        aiMuseumUsageService.recordTts(bo.getMuseumId(), bo.getVoiceId(), vo.getTextLength(),
+            ServletUtils.getClientIP());
         return R.ok(vo);
     }
 

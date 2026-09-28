@@ -3,6 +3,8 @@ package org.ruoyi.service.chat.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ruoyi.common.core.utils.StringUtils;
+import org.ruoyi.common.core.utils.ip.AddressUtils;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.domain.bo.chat.MuseumUsageLogBo;
@@ -48,7 +50,7 @@ public class AiMuseumUsageServiceImpl implements IAiMuseumUsageService {
     private final VoiceProfileMapper voiceProfileMapper;
 
     @Override
-    public void recordChat(Long museumId, Long appId, int chars, long tokensIn, long tokensOut) {
+    public void recordChat(Long museumId, Long appId, int chars, long tokensIn, long tokensOut, String clientIp) {
         try {
             ChatApp app = appId == null ? null : chatAppMapper.selectById(appId);
             BigDecimal cost = BigDecimal.ZERO;
@@ -72,6 +74,7 @@ public class AiMuseumUsageServiceImpl implements IAiMuseumUsageService {
             logRow.setTokensIn((int) tokensIn);
             logRow.setTokensOut((int) tokensOut);
             logRow.setCost(cost);
+            fillClientInfo(logRow, clientIp);
             logRow.setCreateTime(new Date());
             baseMapper.insert(logRow);
         } catch (Exception e) {
@@ -81,7 +84,7 @@ public class AiMuseumUsageServiceImpl implements IAiMuseumUsageService {
     }
 
     @Override
-    public void recordTts(Long museumId, Long voiceId, int chars) {
+    public void recordTts(Long museumId, Long voiceId, int chars, String clientIp) {
         try {
             VoiceProfile profile = voiceId == null ? null : voiceProfileMapper.selectById(voiceId);
             BigDecimal cost = BigDecimal.ZERO;
@@ -98,10 +101,26 @@ public class AiMuseumUsageServiceImpl implements IAiMuseumUsageService {
             logRow.setTokensIn(0);
             logRow.setTokensOut(0);
             logRow.setCost(cost);
+            fillClientInfo(logRow, clientIp);
             logRow.setCreateTime(new Date());
             baseMapper.insert(logRow);
         } catch (Exception e) {
             log.error("博物馆语音用量记账失败 museumId={}, voiceId={}, chars={}", museumId, voiceId, chars, e);
+        }
+    }
+
+    /**
+     * 填充访问者IP与归属地（ip2region离线解析，内网显示"内网IP"；解析失败不阻断记账）
+     */
+    private void fillClientInfo(AiMuseumUsageLog logRow, String clientIp) {
+        if (StringUtils.isBlank(clientIp)) {
+            return;
+        }
+        logRow.setClientIp(clientIp);
+        try {
+            logRow.setLocation(AddressUtils.getRealAddressByIP(clientIp));
+        } catch (Exception e) {
+            log.warn("IP归属地解析失败 ip={}", clientIp, e);
         }
     }
 

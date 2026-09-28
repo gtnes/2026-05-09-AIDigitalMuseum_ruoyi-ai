@@ -153,11 +153,11 @@ public class AppCallProviderDashScope implements AppCallProvider {
                         int chars = request.getContent() == null ? 0 : request.getContent().length();
                         if (request.getMuseumId() != null) {
                             aiMuseumUsageService.recordChat(request.getMuseumId(), request.getAppId(),
-                                chars, tokensIn, tokensOut);
+                                chars, tokensIn, tokensOut, request.getClientIp());
                         } else {
                             aiUsageService.recordChat(request.getOperId(), request.getOperName(),
                                 request.getAppId(), app == null ? null : app.getAppName(),
-                                chars, tokensIn, tokensOut);
+                                chars, tokensIn, tokensOut, request.getClientIp());
                         }
                     }
                 }

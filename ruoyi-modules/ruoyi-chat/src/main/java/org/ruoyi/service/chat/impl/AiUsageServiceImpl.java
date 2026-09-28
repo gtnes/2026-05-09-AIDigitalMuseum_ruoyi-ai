@@ -1,9 +1,10 @@
 package org.ruoyi.service.chat.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.core.utils.StringUtils;
+import org.ruoyi.common.core.utils.ip.AddressUtils;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.domain.bo.chat.AiUsageLogBo;
@@ -18,14 +19,10 @@ import org.ruoyi.mapper.voice.VoiceProfileMapper;
 import org.ruoyi.service.chat.IAiUsageService;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 通用AI用量计费Service业务层处理
@@ -55,7 +52,7 @@ public class AiUsageServiceImpl implements IAiUsageService {
 
     @Override
     public void recordChat(Long operId, String operName, Long appId, String appName,
-                           int chars, long tokensIn, long tokensOut) {
+                           int chars, long tokensIn, long tokensOut, String clientIp) {
         try {
             ChatApp app = appId == null ? null : chatAppMapper.selectById(appId);
             BigDecimal cost = BigDecimal.ZERO;
@@ -82,6 +79,7 @@ public class AiUsageServiceImpl implements IAiUsageService {
             logRow.setCost(cost);
             logRow.setOperId(operId);
             logRow.setOperName(operName);
+            fillClientInfo(logRow, clientIp);
             logRow.setCreateTime(new Date());
             baseMapper.insert(logRow);
         } catch (Exception e) {
@@ -91,7 +89,7 @@ public class AiUsageServiceImpl implements IAiUsageService {
     }
 
     @Override
-    public void recordTts(Long operId, String operName, Long voiceId, String voiceName, int chars) {
+    public void recordTts(Long operId, String operName, Long voiceId, String voiceName, int chars, String clientIp) {
         try {
             VoiceProfile profile = voiceId == null ? null : voiceProfileMapper.selectById(voiceId);
             BigDecimal cost = BigDecimal.ZERO;
@@ -111,6 +109,7 @@ public class AiUsageServiceImpl implements IAiUsageService {
             logRow.setCost(cost);
             logRow.setOperId(operId);
             logRow.setOperName(operName);
+            fillClientInfo(logRow, clientIp);
             logRow.setCreateTime(new Date());
             baseMapper.insert(logRow);
         } catch (Exception e) {
@@ -118,33 +117,35 @@ public class AiUsageServiceImpl implements IAiUsageService {
         }
     }
 
+    /**
+     * 填充访问者IP与归属地（ip2region离线解析，内网显示"内网IP"；解析失败不阻断记账）
+     */
+    private void fillClientInfo(AiUsageLog logRow, String clientIp) {
+        if (StringUtils.isBlank(clientIp)) {
+            return;
+        }
+        logRow.setClientIp(clientIp);
+        try {
+            logRow.setLocation(AddressUtils.getRealAddressByIP(clientIp));
+        } catch (Exception e) {
+            log.warn("IP归属地解析失败 ip={}", clientIp, e);
+        }
+    }
+
     @Override
     public TableDataInfo<AiUsageLogVo> queryPageList(AiUsageLogBo bo, PageQuery pageQuery) {
-        LambdaQueryWrapper<AiUsageLog> lqw = buildQueryWrapper(bo);
-        Page<AiUsageLogVo> result = baseMapper.selectVoPage(pageQuery.build(), lqw);
+        IPage<AiUsageLogVo> result = baseMapper.selectUsageLogPage(pageQuery.build(), bo);
         return TableDataInfo.build(result);
     }
 
     @Override
     public List<AiUsageLogVo> queryList(AiUsageLogBo bo) {
-        return baseMapper.selectVoList(buildQueryWrapper(bo));
+        return baseMapper.selectUsageLogList(bo);
     }
 
     @Override
     public List<AiUsageSummaryVo> summary(AiUsageLogBo bo) {
         return baseMapper.selectUsageSummary(bo);
-    }
-
-    private LambdaQueryWrapper<AiUsageLog> buildQueryWrapper(AiUsageLogBo bo) {
-        LambdaQueryWrapper<AiUsageLog> lqw = Wrappers.lambdaQuery();
-        Map<String, Object> params = bo.getParams();
-        lqw.eq(StringUtils.isNotBlank(bo.getCategory()), AiUsageLog::getCategory, bo.getCategory());
-        lqw.eq(StringUtils.isNotBlank(bo.getBizType()), AiUsageLog::getBizType, bo.getBizType());
-        lqw.like(StringUtils.isNotBlank(bo.getAppName()), AiUsageLog::getAppName, bo.getAppName());
-        lqw.between(params.get("beginTime") != null && params.get("endTime") != null,
-            AiUsageLog::getCreateTime, params.get("beginTime"), params.get("endTime"));
-        lqw.orderByDesc(AiUsageLog::getId);
-        return lqw;
     }
 
 }

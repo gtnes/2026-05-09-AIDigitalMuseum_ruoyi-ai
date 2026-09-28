@@ -1,11 +1,14 @@
 package org.ruoyi.service.voice.security;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.ruoyi.common.redis.utils.RedisUtils;
 import org.ruoyi.common.core.utils.ServletUtils;
+import org.ruoyi.common.tenant.helper.TenantHelper;
 import org.ruoyi.domain.bo.voice.VoiceTtsBo;
+import org.ruoyi.mapper.chat.SysConfigQueryMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,11 +30,19 @@ import java.time.format.DateTimeFormatter;
  *   <li>IP日配额：单IP每日合成次数上限，限制单日最大盗刷成本</li>
  * </ol>
  * 密钥在前端JS中可见，签名仅能抬高直刷门槛，真正的兜底是3/4两层的频率与配额。
+ * <p>
+ * 频率与日配额为系统参数（sys_config，后台"系统管理→参数设置"可改，改完即时生效）：
+ * <ul>
+ *   <li>tts.guard.rate.limit —— 单IP每分钟上限（缺省30）</li>
+ *   <li>tts.guard.daily.limit —— 单IP每日上限（缺省500）</li>
+ * </ul>
+ * 签名开关与密钥仍走yml（需与C端前端常量两端同步，不宜后台随意改动）。
  *
  * @author ruoyi
  * @date 2026-09-15
  */
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class TtsRequestGuard {
 
@@ -39,10 +50,12 @@ public class TtsRequestGuard {
     private static final String KEY_QUOTA = "tts:guard:quota:";
     private static final String KEY_NONCE = "tts:guard:nonce:";
 
-    /** 单IP每分钟最大合成次数（一篇长回复分段并发约10次，需留余量） */
-    private static final int RATE_LIMIT_PER_MINUTE = 30;
-    /** 单IP每日最大合成次数 */
-    private static final int DAILY_LIMIT = 100;
+    private static final String CONFIG_RATE_LIMIT = "tts.guard.rate.limit";
+    private static final String CONFIG_DAILY_LIMIT = "tts.guard.daily.limit";
+
+    /** 参数缺失/非法时的兜底默认值 */
+    private static final int DEFAULT_RATE_LIMIT_PER_MINUTE = 30;
+    private static final int DEFAULT_DAILY_LIMIT = 500;
     /** 签名时间窗口（毫秒） */
     private static final long SIGN_WINDOW_MILLIS = 5 * 60 * 1000L;
 
@@ -54,6 +67,8 @@ public class TtsRequestGuard {
 
     @Value("${tts.sign-secret:tts_9f3b7c2a4e8d1f6b0a5c3e7d9f2b4a6c}")
     private String signSecret;
+
+    private final SysConfigQueryMapper sysConfigQueryMapper;
 
     /**
      * 合成请求入口校验
@@ -105,7 +120,7 @@ public class TtsRequestGuard {
         if (count == 1) {
             RedisUtils.expire(key, Duration.ofSeconds(60));
         }
-        if (count > RATE_LIMIT_PER_MINUTE) {
+        if (count > readIntConfig(CONFIG_RATE_LIMIT, DEFAULT_RATE_LIMIT_PER_MINUTE)) {
             throw new ServiceException("语音合成请求过于频繁，请稍后再试");
         }
     }
@@ -120,8 +135,31 @@ public class TtsRequestGuard {
         if (count == 1) {
             RedisUtils.expire(key, Duration.ofDays(2));
         }
-        if (count > DAILY_LIMIT) {
+        if (count > readIntConfig(CONFIG_DAILY_LIMIT, DEFAULT_DAILY_LIMIT)) {
             throw new ServiceException("今日语音合成次数已达上限，请明天再试");
+        }
+    }
+
+    /**
+     * 读取整数参数：缺失或非法回退默认值（保证守卫不因配置问题失效）
+     */
+    private int readIntConfig(String key, int defaultValue) {
+        String value;
+        try {
+            value = StringUtils.trim(TenantHelper.ignore(() -> sysConfigQueryMapper.selectValueByKey(key)));
+        } catch (Exception e) {
+            log.warn("读取系统参数{}失败，使用默认值{}", key, defaultValue, e);
+            return defaultValue;
+        }
+        if (StringUtils.isBlank(value)) {
+            return defaultValue;
+        }
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (NumberFormatException e) {
+            log.warn("系统参数{}值非法：{}，回退默认值{}", key, value, defaultValue);
+            return defaultValue;
         }
     }
 

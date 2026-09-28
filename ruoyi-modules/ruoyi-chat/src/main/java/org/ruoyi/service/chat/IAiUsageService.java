@@ -28,8 +28,9 @@ public interface IAiUsageService {
      * @param chars      输入内容字符数
      * @param tokensIn   输入token数
      * @param tokensOut  输出token数
+     * @param clientIp   访问者IP（入口捕获，异步SSE线程无请求上下文；归属地离线解析固化）
      */
-    void recordChat(Long operId, String operName, Long appId, String appName, int chars, long tokensIn, long tokensOut);
+    void recordChat(Long operId, String operName, Long appId, String appName, int chars, long tokensIn, long tokensOut, String clientIp);
 
     /**
      * 记录通用语音合成用量（按音色字符单价计费）
@@ -39,8 +40,9 @@ public interface IAiUsageService {
      * @param voiceId   音色档案ID
      * @param voiceName 音色名称快照
      * @param chars     合成文本字符数
+     * @param clientIp  访问者IP（归属地离线解析固化）
      */
-    void recordTts(Long operId, String operName, Long voiceId, String voiceName, int chars);
+    void recordTts(Long operId, String operName, Long voiceId, String voiceName, int chars, String clientIp);
 
     /**
      * 分页查询通用AI用量流水列表

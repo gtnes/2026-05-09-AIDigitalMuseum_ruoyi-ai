@@ -27,8 +27,9 @@ public interface IAiMuseumUsageService {
      * @param chars     输入内容字符数
      * @param tokensIn  输入token数（百炼usage）
      * @param tokensOut 输出token数（百炼usage）
+     * @param clientIp  访问者IP（入口捕获，异步SSE线程无请求上下文；归属地离线解析固化）
      */
-    void recordChat(Long museumId, Long appId, int chars, long tokensIn, long tokensOut);
+    void recordChat(Long museumId, Long appId, int chars, long tokensIn, long tokensOut, String clientIp);
 
     /**
      * 记录博物馆语音合成用量（字符计费，单价取音色档案配置，按当时单价固化费用）
@@ -36,8 +37,9 @@ public interface IAiMuseumUsageService {
      * @param museumId 博物馆ID
      * @param voiceId  音色档案ID
      * @param chars    合成文本长度
+     * @param clientIp 访问者IP（归属地离线解析固化）
      */
-    void recordTts(Long museumId, Long voiceId, int chars);
+    void recordTts(Long museumId, Long voiceId, int chars, String clientIp);
 
     /**
      * 按博物馆+业务类型汇总用量与费用

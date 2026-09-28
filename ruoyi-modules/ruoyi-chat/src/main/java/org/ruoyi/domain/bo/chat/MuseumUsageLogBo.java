@@ -24,4 +24,9 @@ public class MuseumUsageLogBo extends BaseEntity {
      */
     private String bizType;
 
+    /**
+     * 访问者IP（模糊匹配，排查刷量）
+     */
+    private String clientIp;
+
 }

@@ -54,7 +54,13 @@ public interface AiMuseumUsageLogMapper extends BaseMapperPlus<AiMuseumUsageLog,
         <script>
         SELECT u.id, u.museum_id, m.title AS museum_title, u.biz_type,
                u.app_id, a.app_name, u.voice_id, v.voice_name,
-               u.chars, u.tokens_in, u.tokens_out, u.cost, u.create_time
+               u.chars, u.tokens_in, u.tokens_out, u.cost,
+               u.client_ip, u.location,
+               (SELECT COUNT(*) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip AND t.create_time >= CURDATE()) AS today_calls,
+               (SELECT IFNULL(SUM(t.cost), 0) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip AND t.create_time >= CURDATE()) AS today_cost,
+               (SELECT COUNT(*) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip) AS total_calls,
+               (SELECT IFNULL(SUM(t.cost), 0) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip) AS total_cost,
+               u.create_time
         FROM ai_museum_usage_log u
         LEFT JOIN ai_museum m ON u.museum_id = m.id
         LEFT JOIN chat_app a ON u.app_id = a.id
@@ -62,8 +68,9 @@ public interface AiMuseumUsageLogMapper extends BaseMapperPlus<AiMuseumUsageLog,
         <where>
             <if test="bo.museumId != null">AND u.museum_id = #{bo.museumId}</if>
             <if test="bo.bizType != null and bo.bizType != ''">AND u.biz_type = #{bo.bizType}</if>
+            <if test="bo.clientIp != null and bo.clientIp != ''">AND u.client_ip LIKE CONCAT('%', #{bo.clientIp}, '%')</if>
             <if test="bo.params.beginTime != null">AND u.create_time &gt;= #{bo.params.beginTime}</if>
-            <if test="bo.params.endTime != null">AND u.create_time &lt;= #{bo.params.endTime}</if>
+            <if test="bo.params.endTime != null">AND u.create_time &lt; DATE_ADD(#{bo.params.endTime}, INTERVAL 1 DAY)</if>
         </where>
         ORDER BY u.id DESC
         </script>
@@ -77,7 +84,13 @@ public interface AiMuseumUsageLogMapper extends BaseMapperPlus<AiMuseumUsageLog,
         <script>
         SELECT u.id, u.museum_id, m.title AS museum_title, u.biz_type,
                u.app_id, a.app_name, u.voice_id, v.voice_name,
-               u.chars, u.tokens_in, u.tokens_out, u.cost, u.create_time
+               u.chars, u.tokens_in, u.tokens_out, u.cost,
+               u.client_ip, u.location,
+               (SELECT COUNT(*) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip AND t.create_time >= CURDATE()) AS today_calls,
+               (SELECT IFNULL(SUM(t.cost), 0) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip AND t.create_time >= CURDATE()) AS today_cost,
+               (SELECT COUNT(*) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip) AS total_calls,
+               (SELECT IFNULL(SUM(t.cost), 0) FROM ai_museum_usage_log t WHERE t.client_ip = u.client_ip) AS total_cost,
+               u.create_time
         FROM ai_museum_usage_log u
         LEFT JOIN ai_museum m ON u.museum_id = m.id
         LEFT JOIN chat_app a ON u.app_id = a.id
@@ -85,8 +98,9 @@ public interface AiMuseumUsageLogMapper extends BaseMapperPlus<AiMuseumUsageLog,
         <where>
             <if test="bo.museumId != null">AND u.museum_id = #{bo.museumId}</if>
             <if test="bo.bizType != null and bo.bizType != ''">AND u.biz_type = #{bo.bizType}</if>
+            <if test="bo.clientIp != null and bo.clientIp != ''">AND u.client_ip LIKE CONCAT('%', #{bo.clientIp}, '%')</if>
             <if test="bo.params.beginTime != null">AND u.create_time &gt;= #{bo.params.beginTime}</if>
-            <if test="bo.params.endTime != null">AND u.create_time &lt;= #{bo.params.endTime}</if>
+            <if test="bo.params.endTime != null">AND u.create_time &lt; DATE_ADD(#{bo.params.endTime}, INTERVAL 1 DAY)</if>
         </where>
         ORDER BY u.id DESC
         </script>

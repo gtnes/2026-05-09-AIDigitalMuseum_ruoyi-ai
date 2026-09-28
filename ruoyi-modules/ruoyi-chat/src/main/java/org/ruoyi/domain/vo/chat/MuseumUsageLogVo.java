@@ -91,6 +91,42 @@ public class MuseumUsageLogVo implements Serializable {
     private BigDecimal cost;
 
     /**
+     * 访问者IP
+     */
+    @ExcelProperty(value = "IP")
+    private String clientIp;
+
+    /**
+     * IP归属地
+     */
+    @ExcelProperty(value = "归属地")
+    private String location;
+
+    /**
+     * 该IP当日累计调用次数（自然日，查询时实时聚合）
+     */
+    @ExcelProperty(value = "当日调用(次)")
+    private Integer todayCalls;
+
+    /**
+     * 该IP当日累计费用（元，查询时实时聚合）
+     */
+    @ExcelProperty(value = "当日费用(元)")
+    private BigDecimal todayCost;
+
+    /**
+     * 该IP历史总调用次数（查询时实时聚合）
+     */
+    @ExcelProperty(value = "总调用(次)")
+    private Integer totalCalls;
+
+    /**
+     * 该IP历史总费用（元，查询时实时聚合）
+     */
+    @ExcelProperty(value = "总费用(元)")
+    private BigDecimal totalCost;
+
+    /**
      * 调用时间
      */
     @ExcelProperty(value = "调用时间")

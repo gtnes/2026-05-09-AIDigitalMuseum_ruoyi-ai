@@ -29,4 +29,9 @@ public class AiUsageLogBo extends BaseEntity {
      */
     private String appName;
 
+    /**
+     * 访问者IP（模糊匹配，排查刷量）
+     */
+    private String clientIp;
+
 }

@@ -171,6 +171,9 @@ tts:
   # HMAC-SHA256签名密钥（更换时前后端需同步修改）
   sign-secret: tts_9f3b7c2a4e8d1f6b0a5c3e7d9f2b4a6c
 
+# 博物馆C端对话防护阈值（museum.chat.guard.*）已迁移为系统参数：
+# 后台"系统管理→参数设置"修改即时生效，无需重启；脚本见 2026-09-28-usage-log-ip-stats-and-guard-config.sql
+
 # MyBatisPlus配置
 # https://baomidou.com/config/
 mybatis-plus:

@@ -72,6 +72,16 @@ public class AiMuseumUsageLog implements Serializable {
     private BigDecimal cost;
 
     /**
+     * 访问者IP（记账时固化，经X-Forwarded-For解析）
+     */
+    private String clientIp;
+
+    /**
+     * IP归属地（ip2region离线解析固化，内网显示"内网IP"）
+     */
+    private String location;
+
+    /**
      * 调用时间
      */
     private Date createTime;

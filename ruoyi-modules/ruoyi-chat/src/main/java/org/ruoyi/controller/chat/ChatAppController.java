@@ -16,6 +16,7 @@ import org.ruoyi.common.web.core.BaseController;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.core.domain.R;
 import org.ruoyi.common.core.domain.model.LoginUser;
+import org.ruoyi.common.core.utils.ServletUtils;
 import org.ruoyi.common.core.validate.AddGroup;
 import org.ruoyi.common.core.validate.EditGroup;
 import org.ruoyi.common.satoken.utils.LoginHelper;
@@ -30,6 +31,7 @@ import org.ruoyi.domain.bo.chat.ChatAppBo;
 import org.ruoyi.service.chat.IAiMuseumService;
 import org.ruoyi.service.chat.IChatAppService;
 import org.ruoyi.service.chat.impl.app.AppCallService;
+import org.ruoyi.service.chat.security.MuseumChatGuard;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -49,6 +51,7 @@ public class ChatAppController extends BaseController {
     private final IAiMuseumService aiMuseumService;
     private final AppCallService appCallService;
     private final SseEmitterManager sseEmitterManager;
+    private final MuseumChatGuard museumChatGuard;
 
     /**
      * 查询应用管理列表
@@ -155,22 +158,24 @@ public class ChatAppController extends BaseController {
     public R<Void> chatSend(@RequestBody AppCallService.AppCallRequest request) {
         // 通用接口不参与博物馆计费，强制清空防止伪造记账；改记入通用用量流水（系统类别）
         request.setMuseumId(null);
-        // 异步SSE线程无登录上下文，此处捕获操作人供provider记账
+        // 异步SSE线程无登录/请求上下文，此处捕获操作人与访问者IP供provider记账
         LoginUser loginUser = LoginHelper.getLoginUser();
         if (loginUser != null) {
             request.setOperId(loginUser.getUserId());
             request.setOperName(loginUser.getNickname());
         }
+        request.setClientIp(ServletUtils.getClientIP());
         appCallService.streamCall(request);
         return R.ok();
     }
 
     /**
      * 博物馆C端应用对话发送（公开接口，需museumId）
-     * 校验：博物馆存在且启用、服务未到期、智能体已在该博物馆开通
+     * 校验：单IP频率与日配额（防脚本刷量烧token）、博物馆存在且启用、服务未到期、智能体已在该博物馆开通
      */
     @PostMapping("/chat/museumSend")
     public R<Void> museumChatSend(@Validated @RequestBody MuseumChatSendBo bo) {
+        museumChatGuard.check();
         AiMuseumVo museum = aiMuseumService.checkServiceValid(bo.getMuseumId());
         boolean bound = CollUtil.isNotEmpty(museum.getChatapps())
             && museum.getChatapps().stream()
@@ -183,6 +188,8 @@ public class ChatAppController extends BaseController {
         request.setContent(bo.getContent());
         request.setSessionId(bo.getSessionId());
         request.setMuseumId(bo.getMuseumId());
+        // 异步SSE线程无请求上下文，此处捕获访问者IP供用量记账
+        request.setClientIp(ServletUtils.getClientIP());
         appCallService.streamCall(request);
         return R.ok();
     }

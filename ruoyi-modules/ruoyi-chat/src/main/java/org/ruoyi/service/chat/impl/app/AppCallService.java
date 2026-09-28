@@ -35,6 +35,10 @@ public class AppCallService {
          * 操作人昵称快照（通用接口chat/send传入）
          */
         private String operName;
+        /**
+         * 访问者IP（入口controller捕获，异步SSE线程无请求上下文；博物馆C端记账用）
+         */
+        private String clientIp;
     }
 
     public void streamCall(AppCallRequest request) {
