@@ -1,9 +1,7 @@
 package org.ruoyi.common.core.utils.ip;
 
-import cn.hutool.core.io.resource.NoResourceException;
 import cn.hutool.core.io.resource.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
 
@@ -22,22 +20,28 @@ public class RegionUtils {
     private static final Searcher SEARCHER;
 
     static {
+        Searcher searcher;
         try {
             // 1、将 ip2region 数据库文件 xdb 从 ClassPath 加载到内存。
             // 2、基于加载到内存的 xdb 数据创建一个 Searcher 查询对象。
-            SEARCHER = Searcher.newWithBuffer(ResourceUtil.readBytes(IP_XDB_FILENAME));
+            searcher = Searcher.newWithBuffer(ResourceUtil.readBytes(IP_XDB_FILENAME));
             log.info("RegionUtils初始化成功，加载IP地址库数据成功！");
-        } catch (NoResourceException e) {
-            throw new ServiceException("RegionUtils初始化失败，原因：IP地址库数据不存在！");
-        } catch (Exception e) {
-            throw new ServiceException("RegionUtils初始化失败，原因：" + e.getMessage());
+        } catch (Throwable e) {
+            // 初始化失败降级（jar缺少xdb/堆内存不足等），归属地显示"未知"，不阻断登录/记账/合成等主流程；
+            // 注意：静态块中抛出异常会导致该类在整个JVM生命周期内永久不可用（NoClassDefFoundError）
+            searcher = null;
+            log.error("RegionUtils初始化失败，IP归属地将显示为【未知】，请检查ip2region.xdb是否随jar部署及JVM堆内存是否充足", e);
         }
+        SEARCHER = searcher;
     }
 
     /**
      * 根据IP地址离线获取城市
      */
     public static String getCityInfo(String ip) {
+        if (SEARCHER == null) {
+            return "未知";
+        }
         try {
             // 3、执行查询
             String region = SEARCHER.search(StringUtils.trim(ip));
