@@ -117,6 +117,18 @@ public class AiMuseumVo implements Serializable {
     private Long videoChatappId;
 
     /**
+     * AI视频模块别名（C端底部tabbar显示名，空=默认"AI视频"）
+     */
+    @ExcelProperty(value = "AI视频模块别名")
+    private String videoAlias;
+
+    /**
+     * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
+     */
+    @ExcelProperty(value = "VR模块别名")
+    private String vrAlias;
+
+    /**
      * 权限操作列表（保留字段，暂未启用）
      */
     private List<Map<String, Object>> operationList;

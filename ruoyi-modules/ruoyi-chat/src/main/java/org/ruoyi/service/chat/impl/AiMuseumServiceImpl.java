@@ -88,16 +88,25 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
         front.setVideoEnable(vo.getVideoEnable());
         front.setVideoCategoryId(vo.getVideoCategoryId());
         front.setVideoChatappId(vo.getVideoChatappId());
+        front.setVideoAlias(vo.getVideoAlias());
+        front.setVrAlias(vo.getVrAlias());
         if (CollUtil.isNotEmpty(vo.getChatapps())) {
+            // 过滤停用的智能体（appStatus=0，旧数据null视为正常），停用后C端不可见不可调用
+            List<AiMuseumAppVo> enabledApps = vo.getChatapps().stream()
+                .filter(app -> app.getAppStatus() == null || app.getAppStatus() == 1)
+                .toList();
+            if (enabledApps.isEmpty()) {
+                return front;
+            }
             // 批量查询智能体的描述与图标（appDescribe/appShow来自chat_app，不落库）
-            List<Long> appIds = vo.getChatapps().stream()
+            List<Long> appIds = enabledApps.stream()
                 .map(AiMuseumAppVo::getId)
                 .filter(Objects::nonNull)
                 .toList();
             Map<Long, ChatApp> appMap = appIds.isEmpty() ? Map.of() : chatAppMapper.selectByIds(appIds).stream()
                 .collect(Collectors.toMap(ChatApp::getId, app -> app, (a, b) -> a));
             // 按展示排序升序，未设置的排在后面
-            List<AiMuseumAppFrontVo> apps = vo.getChatapps().stream()
+            List<AiMuseumAppFrontVo> apps = enabledApps.stream()
                 .sorted(Comparator.comparing(AiMuseumAppVo::getSort,
                     Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(appVo -> toFrontAppVo(appVo, appMap.get(appVo.getId())))
@@ -150,6 +159,7 @@ public class AiMuseumServiceImpl implements IAiMuseumService {
         frontApp.setVoiceAutoPlay(appVo.getVoiceAutoPlay());
         frontApp.setDuty(appVo.getDuty());
         frontApp.setSort(appVo.getSort());
+        frontApp.setHomeShow(appVo.getHomeShow());
         if (chatApp != null) {
             frontApp.setAppDescribe(chatApp.getAppDescribe());
             frontApp.setAppShow(chatApp.getAppShow());

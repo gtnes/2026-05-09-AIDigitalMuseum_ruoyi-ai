@@ -177,9 +177,11 @@ public class ChatAppController extends BaseController {
     public R<Void> museumChatSend(@Validated @RequestBody MuseumChatSendBo bo) {
         museumChatGuard.check();
         AiMuseumVo museum = aiMuseumService.checkServiceValid(bo.getMuseumId());
+        // 绑定校验：智能体已在此博物馆开通且未停用（appStatus=0停用后无法调用，旧数据null视为正常）
         boolean bound = CollUtil.isNotEmpty(museum.getChatapps())
             && museum.getChatapps().stream()
-                .anyMatch(app -> Objects.equals(app.getId(), bo.getAppId()));
+                .anyMatch(app -> Objects.equals(app.getId(), bo.getAppId())
+                    && (app.getAppStatus() == null || app.getAppStatus() == 1));
         if (!bound) {
             return R.fail("该智能体未在此博物馆开通");
         }

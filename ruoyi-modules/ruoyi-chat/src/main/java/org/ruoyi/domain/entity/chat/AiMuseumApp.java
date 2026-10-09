@@ -69,4 +69,14 @@ public class AiMuseumApp implements Serializable {
      */
     private Integer sort;
 
+    /**
+     * 智能体状态（1正常 0停用，停用后C端无法调用；null视为正常）
+     */
+    private Integer appStatus;
+
+    /**
+     * 首页显示（1开启 0关闭，关闭后博物馆首页圆圈区不显示；null视为开启）
+     */
+    private Integer homeShow;
+
 }

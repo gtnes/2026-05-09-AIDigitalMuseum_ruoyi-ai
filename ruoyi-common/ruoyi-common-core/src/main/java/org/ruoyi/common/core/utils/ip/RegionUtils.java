@@ -1,9 +1,10 @@
 package org.ruoyi.common.core.utils.ip;
 
-import cn.hutool.core.io.resource.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
+
+import java.io.InputStream;
 
 /**
  * 根据ip地址定位工具类，离线方式
@@ -23,8 +24,17 @@ public class RegionUtils {
         Searcher searcher;
         try {
             // 1、将 ip2region 数据库文件 xdb 从 ClassPath 加载到内存。
+            // 必须用RegionUtils自身类加载器读取：ForkJoinPool.commonPool等异步线程的上下文类加载器是系统类加载器，
+            // fat-jar部署下看不到BOOT-INF/classes，若按线程上下文类加载器查找（如hutool ResourceUtil）会报资源不存在
+            byte[] cBuff;
+            try (InputStream in = RegionUtils.class.getClassLoader().getResourceAsStream(IP_XDB_FILENAME)) {
+                if (in == null) {
+                    throw new IllegalStateException("classpath下不存在IP地址库文件：" + IP_XDB_FILENAME);
+                }
+                cBuff = in.readAllBytes();
+            }
             // 2、基于加载到内存的 xdb 数据创建一个 Searcher 查询对象。
-            searcher = Searcher.newWithBuffer(ResourceUtil.readBytes(IP_XDB_FILENAME));
+            searcher = Searcher.newWithBuffer(cBuff);
             log.info("RegionUtils初始化成功，加载IP地址库数据成功！");
         } catch (Throwable e) {
             // 初始化失败降级（jar缺少xdb/堆内存不足等），归属地显示"未知"，不阻断登录/记账/合成等主流程；

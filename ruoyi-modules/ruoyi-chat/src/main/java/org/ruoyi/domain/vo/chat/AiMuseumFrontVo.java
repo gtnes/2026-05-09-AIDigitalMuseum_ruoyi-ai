@@ -78,6 +78,16 @@ public class AiMuseumFrontVo implements Serializable {
     private Long videoChatappId;
 
     /**
+     * AI视频模块别名（C端底部tabbar显示名，空=默认"AI视频"）
+     */
+    private String videoAlias;
+
+    /**
+     * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
+     */
+    private String vrAlias;
+
+    /**
      * 智能体配置列表
      */
     private List<AiMuseumAppFrontVo> chatapps;

@@ -88,4 +88,9 @@ public class AiMuseumAppFrontVo implements Serializable {
      */
     private Integer sort;
 
+    /**
+     * 首页显示（1开启 0关闭，关闭后博物馆首页圆圈区不显示；null视为开启）
+     */
+    private Integer homeShow;
+
 }
