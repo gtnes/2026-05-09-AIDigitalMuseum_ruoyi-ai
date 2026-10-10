@@ -17,7 +17,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,25 +53,34 @@ public class AppCallProviderDashScope implements AppCallProvider {
 
         // 直接使用用户配置的完整 URL，不拼接任何路径
         String endpoint = baseUrl;
+        // agentId非空 → 百炼知识问答v2接口；为空 → 旧版应用调用v1接口
+        boolean v2KnowledgeChat = StringUtils.isNotBlank(app.getAgentId());
         try {
-            String requestBody = buildRequestBody(request.getContent());
-            log.info("【DashScope应用调用】endpoint={}, body={}", endpoint, requestBody);
+            String requestBody = buildRequestBody(app, request.getContent());
+            log.info("【DashScope应用调用】endpoint={}, v2KnowledgeChat={}, body={}", endpoint, v2KnowledgeChat, requestBody);
 
             HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
 
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            // v2知识问答接口用Accept头开启SSE；v1应用调用用X-DashScope-SSE头
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Authorization", "Bearer " + app.getApiKey())
                 .header("Content-Type", "application/json")
-                .header("X-DashScope-SSE", "enable")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .timeout(Duration.ofSeconds(120))
-                .build();
+                .timeout(Duration.ofSeconds(120));
+            if (v2KnowledgeChat) {
+                requestBuilder.header("Accept", "text/event-stream");
+            } else {
+                requestBuilder.header("X-DashScope-SSE", "enable");
+            }
+            HttpRequest httpRequest = requestBuilder.build();
 
             // usage节点随最后一个数据块返回且仅出现一次，用标记防止重复计费
             AtomicBoolean usageRecorded = new AtomicBoolean(false);
+            // v2知识问答：每帧content为增量片段，前端气泡按最新全量覆盖渲染（与v1行为一致），需累积拼接后发送
+            StringBuilder v2ContentBuffer = new StringBuilder();
             client.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofLines())
                 .thenAccept(response -> {
                     log.info("【DashScope响应状态】status={}", response.statusCode());
@@ -83,7 +94,7 @@ public class AppCallProviderDashScope implements AppCallProvider {
                                     SseMessageUtils.sendDone(sessionId);
                                     return;
                                 }
-                                parseAndSend(json, app, request, usageRecorded);
+                                parseAndSend(json, app, request, usageRecorded, v2ContentBuffer);
                             }
                         } catch (Exception e) {
                             log.error("解析SSE事件失败: {}", line, e);
@@ -102,19 +113,39 @@ public class AppCallProviderDashScope implements AppCallProvider {
         }
     }
 
-    private String buildRequestBody(String userInput) throws Exception {
+    private String buildRequestBody(ChatAppVo app, String userInput) throws Exception {
         Map<String, Object> body = new LinkedHashMap<>();
 
         Map<String, Object> input = new LinkedHashMap<>();
-        input.put("prompt", userInput);
-        body.put("input", input);
+        if (StringUtils.isNotBlank(app.getAgentId())) {
+            // 知识问答v2接口：input.messages + parameters.agent_options.agent_id，stream必填true（当前版本仅支持流式）
+            List<Map<String, Object>> messages = new ArrayList<>();
+            Map<String, Object> message = new LinkedHashMap<>();
+            message.put("role", "user");
+            message.put("content", userInput);
+            messages.add(message);
+            input.put("messages", messages);
+            body.put("input", input);
 
-        body.put("parameters", new LinkedHashMap<>());
+            Map<String, Object> agentOptions = new LinkedHashMap<>();
+            agentOptions.put("agent_id", app.getAgentId());
+            Map<String, Object> parameters = new LinkedHashMap<>();
+            parameters.put("agent_options", agentOptions);
+            body.put("parameters", parameters);
+            body.put("stream", true);
+        } else {
+            // 旧版应用调用v1接口
+            input.put("prompt", userInput);
+            body.put("input", input);
+
+            body.put("parameters", new LinkedHashMap<>());
+        }
 
         return OBJECT_MAPPER.writeValueAsString(body);
     }
 
-    private void parseAndSend(String json, ChatAppVo app, AppCallService.AppCallRequest request, AtomicBoolean usageRecorded) {
+    private void parseAndSend(String json, ChatAppVo app, AppCallService.AppCallRequest request,
+                              AtomicBoolean usageRecorded, StringBuilder v2ContentBuffer) {
         String sessionId = request.getSessionId();
         try {
             log.debug("【DashScope解析】json={}", json);
@@ -130,38 +161,19 @@ public class AppCallProviderDashScope implements AppCallProvider {
                 return;
             }
 
-            // 计费记账：usage随最后一个数据块（finish_reason=stop）返回
-            // 智能体应用格式为 usage.models[]（可能含多个模型分项），普通模型为 usage.input_tokens/output_tokens
-            // 注意：中间数据块可能携带空usage节点，仅在出现真实token数时记账
-            // museumId非空记博物馆流水，否则记通用流水（系统类别，apps-chat等登录测试调用）
-            JsonNode usage = root.path("usage");
-            if (!usage.isMissingNode() && !usage.isNull()) {
-                long tokensIn = 0;
-                long tokensOut = 0;
-                JsonNode models = usage.path("models");
-                if (models.isArray() && !models.isEmpty()) {
-                    for (JsonNode m : models) {
-                        tokensIn += m.path("input_tokens").asLong(0);
-                        tokensOut += m.path("output_tokens").asLong(0);
-                    }
-                } else {
-                    tokensIn = usage.path("input_tokens").asLong(0);
-                    tokensOut = usage.path("output_tokens").asLong(0);
+            // 知识问答v2接口：走独立解析（记账延迟到finish帧，思考/检索内容不透出）
+            if (StringUtils.isNotBlank(app.getAgentId())) {
+                JsonNode outputV2 = root.path("output");
+                if (outputV2.isMissingNode()) {
+                    log.warn("【DashScope解析】output节点缺失");
+                    return;
                 }
-                if (tokensIn > 0 || tokensOut > 0) {
-                    if (usageRecorded.compareAndSet(false, true)) {
-                        int chars = request.getContent() == null ? 0 : request.getContent().length();
-                        if (request.getMuseumId() != null) {
-                            aiMuseumUsageService.recordChat(request.getMuseumId(), request.getAppId(),
-                                chars, tokensIn, tokensOut, request.getClientIp());
-                        } else {
-                            aiUsageService.recordChat(request.getOperId(), request.getOperName(),
-                                request.getAppId(), app == null ? null : app.getAppName(),
-                                chars, tokensIn, tokensOut, request.getClientIp());
-                        }
-                    }
-                }
+                parseV2KnowledgeChat(root, outputV2, app, request, usageRecorded, v2ContentBuffer);
+                return;
             }
+
+            // v1：计费记账（usage随最后一个数据块返回，中间数据块可能携带空usage节点，仅在出现真实token数时记账）
+            recordUsage(root.path("usage"), app, request, usageRecorded);
 
             // 应用中心API的响应格式: {"output": {"text": "..."}, "usage": {...}}
             JsonNode output = root.path("output");
@@ -220,6 +232,104 @@ public class AppCallProviderDashScope implements AppCallProvider {
             }
         } catch (Exception e) {
             log.error("解析响应内容失败: {}", json, e);
+        }
+    }
+
+    /**
+     * 知识问答v2接口响应解析
+     * 响应分阶段：planning（规划思考）→ tool_calling（知识检索）→ generating（最终回答）
+     * 采用反向排除：仅跳过明确的 planning/tool 帧，其余帧内容均作为回答输出
+     * （文档说明空包/边界帧的 step、step_change、group 可能缺失，按 step==generating 正向匹配会漏发内容）
+     */
+    private void parseV2KnowledgeChat(JsonNode root, JsonNode output, ChatAppVo app,
+                                       AppCallService.AppCallRequest request, AtomicBoolean usageRecorded,
+                                       StringBuilder contentBuffer) {
+        String sessionId = request.getSessionId();
+        JsonNode choices = output.path("choices");
+        if (!choices.isArray() || choices.isEmpty()) {
+            return;
+        }
+        JsonNode choice = choices.get(0);
+        JsonNode message = choice.path("message");
+        // 仅尾包（generation_end帧）finish_reason为stop，流式片段为空串
+        boolean finished = "stop".equals(choice.path("finish_reason").asText(""));
+
+        // 计费记账：generation_end帧携带最终usage；中间tool_calling帧的usage为检索用量，不记账
+        if (finished) {
+            recordUsage(root.path("usage"), app, request, usageRecorded);
+        }
+
+        // 规划思考帧（step=planning）、工具调用帧（step=tool_calling）、工具返回帧（type=tool）不透出给前端
+        String messageType = message.path("type").asText("");
+        String step = message.path("extra").path("step").asText("");
+        boolean thinkingOrTool = "tool".equals(messageType)
+            || "planning".equals(step) || "tool_calling".equals(step);
+
+        if (!thinkingOrTool) {
+            // 增量片段累积到缓冲区，发送当前全量（前端气泡按最新全量覆盖渲染）
+            appendV2Content(contentBuffer, message.path("content"));
+            if (contentBuffer.length() > 0) {
+                SseMessageUtils.sendContent(sessionId, contentBuffer.toString());
+            }
+        }
+
+        if (finished) {
+            log.info("【DashScope完成】sessionId={}", sessionId);
+            SseMessageUtils.sendDone(sessionId);
+        }
+    }
+
+    /**
+     * 拼接v2回答内容到缓冲区：content 可为纯文本字符串或多模态数组（取其中text部分）
+     */
+    private void appendV2Content(StringBuilder buffer, JsonNode contentNode) {
+        if (contentNode.isTextual()) {
+            buffer.append(contentNode.asText(""));
+            return;
+        }
+        if (contentNode.isArray()) {
+            for (JsonNode item : contentNode) {
+                if ("text".equals(item.path("type").asText(""))) {
+                    buffer.append(item.path("text").asText(""));
+                }
+            }
+        }
+    }
+
+    /**
+     * 计费记账：智能体应用格式为 usage.models[]（可能含多个模型分项），知识问答v2/普通模型为 usage.input_tokens/output_tokens
+     * museumId非空记博物馆流水，否则记通用流水（系统类别，apps-chat等登录测试调用）
+     */
+    private void recordUsage(JsonNode usage, ChatAppVo app, AppCallService.AppCallRequest request, AtomicBoolean usageRecorded) {
+        if (usage.isMissingNode() || usage.isNull()) {
+            return;
+        }
+        long tokensIn = 0;
+        long tokensOut = 0;
+        JsonNode models = usage.path("models");
+        if (models.isArray() && !models.isEmpty()) {
+            for (JsonNode m : models) {
+                tokensIn += m.path("input_tokens").asLong(0);
+                tokensOut += m.path("output_tokens").asLong(0);
+            }
+        } else {
+            tokensIn = usage.path("input_tokens").asLong(0);
+            tokensOut = usage.path("output_tokens").asLong(0);
+        }
+        if (tokensIn <= 0 && tokensOut <= 0) {
+            return;
+        }
+        if (!usageRecorded.compareAndSet(false, true)) {
+            return;
+        }
+        int chars = request.getContent() == null ? 0 : request.getContent().length();
+        if (request.getMuseumId() != null) {
+            aiMuseumUsageService.recordChat(request.getMuseumId(), request.getAppId(),
+                chars, tokensIn, tokensOut, request.getClientIp());
+        } else {
+            aiUsageService.recordChat(request.getOperId(), request.getOperName(),
+                request.getAppId(), app == null ? null : app.getAppName(),
+                chars, tokensIn, tokensOut, request.getClientIp());
         }
     }
 }
