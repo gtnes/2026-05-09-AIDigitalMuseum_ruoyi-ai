@@ -56,6 +56,11 @@ public class ChatApp extends TenantEntity {
     private String apiKey;
 
     /**
+     * 智能体ID（百炼知识问答v2接口的agent_id，aid-xxx格式；旧v1应用调用无需填写）
+     */
+    private String agentId;
+
+    /**
      * 输入token单价（元/千token，博物馆对话用量计费依据，空=不计费）
      */
     @TableField("price_in_per_1k")

@@ -68,6 +68,12 @@ public class ChatAppVo implements Serializable {
     private String apiKey;
 
     /**
+     * 智能体ID（百炼知识问答v2接口的agent_id，aid-xxx格式；旧v1应用调用无需填写）
+     */
+    @ExcelProperty(value = "智能体ID")
+    private String agentId;
+
+    /**
      * 输入token单价（元/千token，博物馆对话用量计费依据，空=不计费）
      */
     @ExcelProperty(value = "输入token单价(元/千token)")
